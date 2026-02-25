@@ -1,1 +1,514 @@
-<h1>hello,dx</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相机博物馆</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- 自定义配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a202c',
+                        secondary: '#4a5568',
+                        accent: '#3182ce',
+                        light: '#f7fafc',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 自定义工具类 */
+            .scroll-container {
+                overflow: hidden;
+                position: relative;
+            }
+            .scroll-content {
+                display: flex;
+                animation: scroll 30s linear infinite;
+            }
+            .scroll-content:hover {
+                animation-play-state: paused;
+            }
+            @keyframes scroll {
+                0% {
+                    transform: translateX(0);
+                }
+                100% {
+                    transform: translateX(-50%);
+                }
+            }
+            .brand-active {
+                @apply bg-accent text-white border-accent;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-primary min-h-screen">
+    <!-- 页面头部 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-6">
+            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-center mb-6">相机博物馆</h1>
+            
+            <!-- 品牌选项栏 -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-2">
+                <button class="brand-btn brand-active px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200" data-brand="sony">
+                    索尼
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="canon">
+                    佳能
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="nikon">
+                    尼康
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="panasonic">
+                    松下
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="olympus">
+                    奥林巴斯
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="leica">
+                    徕卡
+                </button>
+                <button class="brand-btn px-4 py-2 rounded-full border border-gray-300 text-sm md:text-base transition-all duration-200 hover:bg-gray-100" data-brand="fujifilm">
+                    富士
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 品牌标题 -->
+        <div class="text-center mb-8">
+            <h2 class="brand-title text-2xl md:text-3xl font-semibold">索尼 主流机型</h2>
+            <p class="text-secondary mt-2">点击机型图片查看详细参数</p>
+        </div>
+
+        <!-- 横向滚动容器 -->
+        <div class="scroll-container h-[400px] md:h-[450px] mb-12">
+            <div class="scroll-content" id="cameraScroll">
+                <!-- 内容由JS动态生成 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 详情弹窗 -->
+    <div id="detailModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl w-[90%] max-w-4xl max-h-[80vh] overflow-auto p-6 relative">
+            <button id="closeModal" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="camera-detail-img">
+                    <img src="" alt="" class="w-full h-auto rounded-lg shadow-md">
+                </div>
+                <div class="camera-detail-info">
+                    <h3 class="text-2xl font-bold mb-2 camera-name"></h3>
+                    <p class="text-accent font-medium mb-4 camera-brand"></p>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <span class="text-secondary font-medium">发售时间：</span>
+                            <span class="camera-release"></span>
+                        </div>
+                        <div>
+                            <span class="text-secondary font-medium">传感器：</span>
+                            <span class="camera-sensor"></span>
+                        </div>
+                        <div>
+                            <span class="text-secondary font-medium">有效像素：</span>
+                            <span class="camera-pixels"></span>
+                        </div>
+                        <div>
+                            <span class="text-secondary font-medium">视频规格：</span>
+                            <span class="camera-video"></span>
+                        </div>
+                        <div>
+                            <span class="text-secondary font-medium">连拍速度：</span>
+                            <span class="camera-shooting"></span>
+                        </div>
+                        <div>
+                            <span class="text-secondary font-medium">电池续航：</span>
+                            <span class="camera-battery"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-primary text-white py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p>邓璇&相机博物馆 &copy; 2026 版权所有</p>
+        </div>
+    </footer>
+
+    <script>
+        // 相机数据
+        const cameraData = {
+            sony: {
+                name: "索尼",
+                models: [
+                    {
+                        id: "sony-a7m4",
+                        name: "Alpha 7 IV (A7M4)",
+                        img: "https://picsum.photos/seed/sonya7m4/400/300",
+                        release: "2021年10月",
+                        sensor: "全画幅Exmor R CMOS传感器",
+                        pixels: "3300万有效像素",
+                        video: "8K 24p / 4K 60p",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约520张（取景器）/ 约680张（LCD）"
+                    },
+                    {
+                        id: "sony-a1",
+                        name: "Alpha 1 (A1)",
+                        img: "https://picsum.photos/seed/sonya1/400/300",
+                        release: "2021年1月",
+                        sensor: "全画幅Exmor RS CMOS传感器",
+                        pixels: "5010万有效像素",
+                        video: "8K 30p / 4K 120p",
+                        shooting: "最高30张/秒连拍",
+                        battery: "约530张（取景器）/ 约740张（LCD）"
+                    },
+                    {
+                        id: "sony-a6700",
+                        name: "Alpha 6700 (A6700)",
+                        img: "https://picsum.photos/seed/sonya6700/400/300",
+                        release: "2023年7月",
+                        sensor: "APS-C画幅Exmor R CMOS传感器",
+                        pixels: "2600万有效像素",
+                        video: "4K 60p 10-bit 4:2:2",
+                        shooting: "最高11张/秒连拍",
+                        battery: "约440张（取景器）/ 约670张（LCD）"
+                    },
+                    {
+                        id: "sony-zv-e1",
+                        name: "ZV-E1",
+                        img: "https://picsum.photos/seed/sonyzve1/400/300",
+                        release: "2023年2月",
+                        sensor: "全画幅Exmor R CMOS传感器",
+                        pixels: "1210万有效像素",
+                        video: "4K 120p / FHD 240p",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约490张（取景器）/ 约620张（LCD）"
+                    }
+                ]
+            },
+            canon: {
+                name: "佳能",
+                models: [
+                    {
+                        id: "canon-r5",
+                        name: "EOS R5",
+                        img: "https://picsum.photos/seed/canonr5/400/300",
+                        release: "2020年7月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "4500万有效像素",
+                        video: "8K 30p / 4K 120p",
+                        shooting: "最高12张/秒连拍",
+                        battery: "约370张（取景器）/ 约510张（LCD）"
+                    },
+                    {
+                        id: "canon-r6ii",
+                        name: "EOS R6 Mark II",
+                        img: "https://picsum.photos/seed/canonr6ii/400/300",
+                        release: "2022年11月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "2420万有效像素",
+                        video: "4K 60p 10-bit 4:2:2",
+                        shooting: "最高40张/秒连拍",
+                        battery: "约360张（取景器）/ 约500张（LCD）"
+                    },
+                    {
+                        id: "canon-m50ii",
+                        name: "EOS M50 Mark II",
+                        img: "https://picsum.photos/seed/canonm50ii/400/300",
+                        release: "2020年10月",
+                        sensor: "APS-C画幅CMOS传感器",
+                        pixels: "2410万有效像素",
+                        video: "4K 24p / FHD 60p",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约235张（取景器）/ 约305张（LCD）"
+                    }
+                ]
+            },
+            nikon: {
+                name: "尼康",
+                models: [
+                    {
+                        id: "nikon-z9",
+                        name: "Z 9",
+                        img: "https://picsum.photos/seed/nikonz9/400/300",
+                        release: "2021年10月",
+                        sensor: "全画幅堆栈式CMOS传感器",
+                        pixels: "4575万有效像素",
+                        video: "8K 60p / 4K 120p",
+                        shooting: "最高20张/秒连拍",
+                        battery: "约700张（取景器）/ 约1000张（LCD）"
+                    },
+                    {
+                        id: "nikon-z7ii",
+                        name: "Z 7II",
+                        img: "https://picsum.photos/seed/nikonz7ii/400/300",
+                        release: "2020年10月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "4575万有效像素",
+                        video: "4K 60p 10-bit",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约360张（取景器）/ 约410张（LCD）"
+                    },
+                    {
+                        id: "nikon-z30",
+                        name: "Z 30",
+                        img: "https://picsum.photos/seed/nikonz30/400/300",
+                        release: "2022年7月",
+                        sensor: "APS-C画幅CMOS传感器",
+                        pixels: "2088万有效像素",
+                        video: "4K 30p / FHD 120p",
+                        shooting: "最高11张/秒连拍",
+                        battery: "约320张（取景器）/ 约400张（LCD）"
+                    }
+                ]
+            },
+            panasonic: {
+                name: "松下",
+                models: [
+                    {
+                        id: "panasonic-s5ii",
+                        name: "Lumix S5 II",
+                        img: "https://picsum.photos/seed/panasonics5ii/400/300",
+                        release: "2023年1月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "2420万有效像素",
+                        video: "6K 30p / 4K 60p",
+                        shooting: "最高30张/秒连拍",
+                        battery: "约370张（取景器）/ 约470张（LCD）"
+                    },
+                    {
+                        id: "panasonic-gh6",
+                        name: "Lumix GH6",
+                        img: "https://picsum.photos/seed/panasonicgh6/400/300",
+                        release: "2022年2月",
+                        sensor: "M4/3画幅CMOS传感器",
+                        pixels: "2520万有效像素",
+                        video: "5.7K 60p / 4K 120p",
+                        shooting: "最高12张/秒连拍",
+                        battery: "约360张（取景器）/ 约410张（LCD）"
+                    }
+                ]
+            },
+            olympus: {
+                name: "奥林巴斯",
+                models: [
+                    {
+                        id: "olympus-om1",
+                        name: "OM-1",
+                        img: "https://picsum.photos/seed/olympusom1/400/300",
+                        release: "2022年2月",
+                        sensor: "M4/3画幅堆栈式CMOS传感器",
+                        pixels: "2040万有效像素",
+                        video: "4K 60p 10-bit",
+                        shooting: "最高50张/秒连拍",
+                        battery: "约420张（取景器）/ 约500张（LCD）"
+                    },
+                    {
+                        id: "olympus-em1iii",
+                        name: "OM-D E-M1 Mark III",
+                        img: "https://picsum.photos/seed/olympusem1iii/400/300",
+                        release: "2020年2月",
+                        sensor: "M4/3画幅CMOS传感器",
+                        pixels: "2040万有效像素",
+                        video: "4K 30p",
+                        shooting: "最高60张/秒连拍",
+                        battery: "约410张（取景器）/ 约500张（LCD）"
+                    }
+                ]
+            },
+            leica: {
+                name: "徕卡",
+                models: [
+                    {
+                        id: "leica-q2",
+                        name: "Q2",
+                        img: "https://picsum.photos/seed/leicaq2/400/300",
+                        release: "2019年3月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "4730万有效像素",
+                        video: "4K 30p",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约370张（取景器）/ 约400张（LCD）"
+                    },
+                    {
+                        id: "leica-sl2",
+                        name: "SL2",
+                        img: "https://picsum.photos/seed/leicasl2/400/300",
+                        release: "2020年11月",
+                        sensor: "全画幅CMOS传感器",
+                        pixels: "4700万有效像素",
+                        video: "4K 60p",
+                        shooting: "最高10张/秒连拍",
+                        battery: "约350张（取景器）/ 约400张（LCD）"
+                    }
+                ]
+            },
+            fujifilm: {
+                name: "富士",
+                models: [
+                    {
+                        id: "fujifilm-xt5",
+                        name: "X-T5",
+                        img: "https://picsum.photos/seed/fujifilmxt5/400/300",
+                        release: "2022年11月",
+                        sensor: "APS-C画幅X-Trans CMOS 5 HR传感器",
+                        pixels: "4020万有效像素",
+                        video: "6.2K 30p / 4K 60p",
+                        shooting: "最高15张/秒连拍",
+                        battery: "约480张（取景器）/ 约600张（LCD）"
+                    },
+                    {
+                        id: "fujifilm-gfx100s",
+                        name: "GFX 100S",
+                        img: "https://picsum.photos/seed/fujifilmgfx100s/400/300",
+                        release: "2021年1月",
+                        sensor: "中画幅CMOS传感器",
+                        pixels: "1020万有效像素",
+                        video: "4K 30p",
+                        shooting: "最高8张/秒连拍",
+                        battery: "约400张（取景器）/ 约460张（LCD）"
+                    },
+                    {
+                        id: "fujifilm-xh2",
+                        name: "X-H2",
+                        img: "https://picsum.photos/seed/fujifilmxh2/400/300",
+                        release: "2022年9月",
+                        sensor: "APS-C画幅X-Trans CMOS 5 HR传感器",
+                        pixels: "4020万有效像素",
+                        video: "8K 30p / 4K 60p",
+                        shooting: "最高15张/秒连拍",
+                        battery: "约420张（取景器）/ 约500张（LCD）"
+                    }
+                ]
+            }
+        };
+
+        // 元素获取
+        const brandBtns = document.querySelectorAll('.brand-btn');
+        const brandTitle = document.querySelector('.brand-title');
+        const cameraScroll = document.getElementById('cameraScroll');
+        const detailModal = document.getElementById('detailModal');
+        const closeModal = document.getElementById('closeModal');
+        
+        // 初始化 - 默认加载索尼数据
+        renderCameraList('sony');
+
+        // 品牌切换事件
+        brandBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // 移除所有选中态
+                brandBtns.forEach(b => b.classList.remove('brand-active'));
+                // 添加当前选中态
+                this.classList.add('brand-active');
+                
+                // 获取品牌标识
+                const brand = this.dataset.brand;
+                // 更新标题
+                brandTitle.textContent = `${cameraData[brand].name} 主流机型`;
+                // 渲染对应品牌相机列表
+                renderCameraList(brand);
+            });
+        });
+
+        // 关闭弹窗事件
+        closeModal.addEventListener('click', () => {
+            detailModal.classList.add('hidden');
+        });
+
+        // 点击弹窗外区域关闭
+        detailModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // 渲染相机列表
+        function renderCameraList(brand) {
+            const brandData = cameraData[brand];
+            let html = '';
+            
+            // 生成两份相同内容，实现无缝滚动
+            for (let i = 0; i < 2; i++) {
+                brandData.models.forEach(model => {
+                    html += `
+                        <div class="min-w-[300px] md:min-w-[350px] p-4">
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden card-hover cursor-pointer" data-model-id="${model.id}" data-brand="${brand}">
+                                <img src="${model.img}" alt="${model.name}" class="w-full h-[200px] object-cover">
+                                <div class="p-4">
+                                    <h3 class="font-bold text-lg mb-1">${model.name}</h3>
+                                    <p class="text-secondary text-sm">${brandData.name}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // 更新滚动内容
+            cameraScroll.innerHTML = html;
+            
+            // 为每个相机卡片添加点击事件
+            document.querySelectorAll('[data-model-id]').forEach(card => {
+                card.addEventListener('click', function() {
+                    const brand = this.dataset.brand;
+                    const modelId = this.dataset.modelId;
+                    // 查找对应机型数据
+                    const model = cameraData[brand].models.find(m => m.id === modelId);
+                    // 填充弹窗数据
+                    fillModalData(model, brand);
+                    // 显示弹窗
+                    detailModal.classList.remove('hidden');
+                });
+            });
+        }
+
+        // 填充弹窗数据
+        function fillModalData(model, brand) {
+            document.querySelector('.camera-detail-img img').src = model.img;
+            document.querySelector('.camera-detail-img img').alt = model.name;
+            document.querySelector('.camera-name').textContent = model.name;
+            document.querySelector('.camera-brand').textContent = cameraData[brand].name;
+            document.querySelector('.camera-release').textContent = model.release;
+            document.querySelector('.camera-sensor').textContent = model.sensor;
+            document.querySelector('.camera-pixels').textContent = model.pixels;
+            document.querySelector('.camera-video').textContent = model.video;
+            document.querySelector('.camera-shooting').textContent = model.shooting;
+            document.querySelector('.camera-battery').textContent = model.battery;
+        }
+
+        // 键盘ESC关闭弹窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                detailModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
