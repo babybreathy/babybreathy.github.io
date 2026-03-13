@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>相机博物馆 - dx 的空间站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --accent-color: #00cec9;
+            --bg-dark: #0c0c1e;
+            --bg-card: #1a1a3e;
+            --text-primary: #ffffff;
+            --text-secondary: #b2b2b2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(12, 12, 30, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            padding: 10px 25px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.5);
+        }
+
+        /* 英雄标题 */
+        .hero {
+            padding: 150px 50px 80px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* 相机滚动展示区 */
+        .showcase-section {
+            padding: 50px 0;
+            position: relative;
+        }
+
+        .showcase-container {
+            position: relative;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .showcase-track {
+            display: flex;
+            gap: 30px;
+            padding: 20px 50px;
+            transition: transform 0.5s ease;
+        }
+
+        .camera-card {
+            min-width: 400px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .camera-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 60px rgba(108, 92, 231, 0.3);
+        }
+
+        .camera-image {
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .camera-card:hover .camera-image img {
+            transform: scale(1.1);
+        }
+
+        .camera-info {
+            padding: 25px;
+        }
+
+        .camera-brand {
+            font-size: 14px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .camera-name {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .camera-preview {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .spec-tag {
+            padding: 6px 12px;
+            background: rgba(108, 92, 231, 0.2);
+            border-radius: 15px;
+            font-size: 13px;
+            color: var(--secondary-color);
+        }
+
+        /* 导航按钮 */
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-color);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-btn.prev {
+            left: 10px;
+        }
+
+        .nav-btn.next {
+            right: 10px;
+        }
+
+        /* 详情模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            max-width: 1000px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--accent-color);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .modal-image {
+            background: linear-gradient(135deg, #2a2a4a, #1a1a3e);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 150px;
+            min-height: 400px;
+            overflow: hidden;
+        }
+
+        .modal-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-details h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-brand {
+            font-size: 18px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+        }
+
+        .modal-description {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .spec-item {
+            background: rgba(108, 92, 231, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .spec-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .spec-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        /* 分类标签 */
+        .categories {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 30px 50px;
+            flex-wrap: wrap;
+        }
+
+        .category-btn {
+            padding: 12px 25px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover,
+        .category-btn.active {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-color: transparent;
+        }
+
+        /* 页脚 */
+        footer {
+            padding: 50px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 50px;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            nav {
+                padding: 20px;
+            }
+
+            .hero {
+                padding: 120px 20px 50px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .showcase-track {
+                padding: 20px;
+            }
+
+            .camera-card {
+                min-width: 300px;
+            }
+
+            .modal-body {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .modal-image {
+                min-height: 250px;
+                font-size: 80px;
+            }
+
+            .specs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav>
+        <a href="index.html" class="logo">📷 相机博物馆</a>
+        <a href="index.html" class="back-btn">← 返回首页</a>
+    </nav>
+
+    <!-- 英雄标题 -->
+    <section class="hero">
+        <h1>世界主流相机博物馆</h1>
+        <p>探索摄影史上的经典之作，从胶片时代到数码革命，每一台相机都承载着一个时代的记忆</p>
+    </section>
+
+    <!-- 分类标签 -->
+    <div class="categories">
+        <button class="category-btn active" data-category="all">全部</button>
+        <button class="category-btn" data-category="leica">徕卡</button>
+        <button class="category-btn" data-category="canon">佳能</button>
+        <button class="category-btn" data-category="nikon">尼康</button>
+        <button class="category-btn" data-category="sony">索尼</button>
+        <button class="category-btn" data-category="fujifilm">富士</button>
+        <button class="category-btn" data-category="hasselblad">哈苏</button>
+        <button class="category-btn" data-category="panasonic">松下</button>
+        <button class="category-btn" data-category="olympus">奥林巴斯</button>
+    </div>
+
+    <!-- 相机展示区 -->
+    <section class="showcase-section">
+        <div class="showcase-container">
+            <button class="nav-btn prev" onclick="scrollShowcase(-1)">‹</button>
+            <div class="showcase-track" id="showcaseTrack">
+                <!-- 相机卡片将由 JS 动态生成 -->
+            </div>
+            <button class="nav-btn next" onclick="scrollShowcase(1)">›</button>
+        </div>
+    </section>
+
+    <!-- 详情模态框 -->
+    <div class="modal" id="cameraModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-body" id="modalBody">
+                <!-- 详情内容将由 JS 动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2026 dx 的空间站 - 相机博物馆。All rights reserved.</p>
+    </footer>
+
+    <script>
+        // 相机数据
+        const cameras = [
+            {
+                id: 1,
+                brand: 'Leica',
+                name: 'Leica M6',
+                category: 'leica',
+                emoji: '📷',
+                year: '1984',
+                description: '徕卡 M6 是旁轴相机的经典之作，被誉为 20 世纪最好的胶片相机之一。它继承了徕卡 M 系列的优良传统，加入了内置测光系统，让胶片摄影变得更加简单。',
+                specs: {
+                    '类型': '35mm 旁轴胶片相机',
+                    '卡口': '徕卡 M 卡口',
+                    '测光': 'TTL 中央重点测光',
+                    '快门': '横走式布帘快门 1-1/1000s',
+                    '取景器': '0.72x 放大倍率',
+                    '重量': '585g'
+                }
+            },
+            {
+                id: 2,
+                brand: 'Canon',
+                name: 'Canon EOS R5',
+                category: 'canon',
+                emoji: '📸',
+                year: '2020',
+                description: '佳能 EOS R5 是全画幅无反相机的旗舰之作，首次实现了 8K 视频录制功能。搭载双像素 CMOS AF II 系统，对焦性能卓越。',
+                specs: {
+                    '传感器': '4500 万像素全画幅 CMOS',
+                    '处理器': 'DIGIC X',
+                    '对焦': '1053 点双像素 CMOS AF II',
+                    '连拍': '最高 20 张/秒',
+                    '视频': '8K 30fps / 4K 120fps',
+                    '重量': '738g'
+                }
+            },
+            {
+                id: 3,
+                brand: 'Nikon',
+                name: 'Nikon F3',
+                category: 'nikon',
+                emoji: '📷',
+                year: '1980',
+                description: '尼康 F3 是尼康历史上生产周期最长的专业胶片单反相机，以其可靠性和耐用性著称。众多战地记者和新闻摄影师的首选器材。',
+                specs: {
+                    '类型': '35mm 单反胶片相机',
+                    '卡口': '尼康 F 卡口',
+                    '测光': 'TTL 中央重点测光',
+                    '快门': '横走式钛帘快门 8-1/2000s',
+                    '取景器': '可更换式',
+                    '重量': '715g'
+                }
+            },
+            {
+                id: 4,
+                brand: 'Sony',
+                name: 'Sony A7R V',
+                category: 'sony',
+                emoji: '📸',
+                year: '2022',
+                description: '索尼 A7R V 是高像素全画幅微单的巅峰之作，搭载 6100 万像素传感器和 AI 智能对焦系统。在商业摄影和风光摄影领域表现卓越。',
+                specs: {
+                    '传感器': '6100 万像素全画幅 Exmor R',
+                    '处理器': 'BIONZ XR',
+                    '对焦': 'AI 智能对焦 693 点',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '8K 24fps / 4K 60fps',
+                    '重量': '723g'
+                }
+            },
+            {
+                id: 5,
+                brand: 'Fujifilm',
+                name: 'Fujifilm GFX 100S',
+                category: 'fujifilm',
+                emoji: '📷',
+                year: '2021',
+                description: '富士 GFX 100S 将中画幅相机的小型化推向新高度。1 亿 200 万像素的超大传感器，带来极致的画质表现。',
+                specs: {
+                    '传感器': '1.02 亿像素中画幅 43.8×32.9mm',
+                    '处理器': 'X-Processor 4',
+                    '对焦': '425 点混合 AF',
+                    '连拍': '最高 5 张/秒',
+                    '视频': '4K 30fps',
+                    '重量': '900g'
+                }
+            },
+            {
+                id: 6,
+                brand: 'Hasselblad',
+                name: 'Hasselblad 500C/M',
+                category: 'hasselblad',
+                emoji: '📸',
+                year: '1970',
+                description: '哈苏 500C/M 是传奇的中画幅胶片相机，也是人类历史上第一台登上月球的相机。模块化设计和卓越画质使其成为专业摄影师的挚爱。',
+                specs: {
+                    '类型': '中画幅单反胶片相机',
+                    '卡口': '哈苏 V 系统',
+                    '画幅': '6×6cm (56×56mm)',
+                    '快门': '镜间快门 1-1/500s',
+                    '取景器': '可更换式腰平/眼平',
+                    '重量': '1250g'
+                }
+            },
+            {
+                id: 7,
+                brand: 'Leica',
+                name: 'Leica Q2',
+                category: 'leica',
+                emoji: '📷',
+                year: '2019',
+                description: '徕卡 Q2 是全画幅固定镜头相机的代表作，搭载 4730 万像素传感器和 Summilux 28mm f/1.7 镜头。紧凑机身蕴含强大性能。',
+                specs: {
+                    '传感器': '4730 万像素全画幅',
+                    '镜头': 'Summilux 28mm f/1.7 ASPH',
+                    '对焦': '对比度检测 AF',
+                    '连拍': '最高 20 张/秒',
+                    '视频': '4K 30fps',
+                    '重量': '734g'
+                }
+            },
+            {
+                id: 8,
+                brand: 'Canon',
+                name: 'Canon AE-1',
+                category: 'canon',
+                emoji: '📸',
+                year: '1976',
+                description: '佳能 AE-1 是历史上第一台搭载微处理器的胶片相机，让光圈优先自动曝光变得普及。销量超过 100 万台，是胶片相机的经典入门机型。',
+                specs: {
+                    '类型': '35mm 单反胶片相机',
+                    '卡口': '佳能 FD 卡口',
+                    '曝光': '光圈优先自动/手动',
+                    '快门': '横走式布帘快门 2-1/1000s',
+                    '测光': 'TTL 中央重点',
+                    '重量': '620g'
+                }
+            },
+            {
+                id: 9,
+                brand: 'Nikon',
+                name: 'Nikon Z9',
+                category: 'nikon',
+                emoji: '📷',
+                year: '2021',
+                description: '尼康 Z9 是尼康旗舰无反相机，采用堆叠式 CMOS 传感器，实现无黑屏高速连拍。专业体育和野生动物摄影师的终极选择。',
+                specs: {
+                    '传感器': '4570 万像素堆叠式全画幅',
+                    '处理器': 'EXPEED 7',
+                    '对焦': '3D 追踪 AF 493 点',
+                    '连拍': '最高 120 张/秒',
+                    '视频': '8K 30fps / 4K 120fps',
+                    '重量': '1340g'
+                }
+            },
+            {
+                id: 10,
+                brand: 'Sony',
+                name: 'Sony A1',
+                category: 'sony',
+                emoji: '📸',
+                year: '2021',
+                description: '索尼 A1 是索尼的旗舰全能相机，集高像素、高速度和高质量视频于一身。5000 万像素配合 30 张/秒连拍，重新定义全能相机。',
+                specs: {
+                    '传感器': '5010 万像素堆叠式全画幅',
+                    '处理器': 'BIONZ XR',
+                    '对焦': '759 点实时追踪 AF',
+                    '连拍': '最高 30 张/秒',
+                    '视频': '8K 30fps / 4K 120fps',
+                    '重量': '737g'
+                }
+            },
+            {
+                id: 11,
+                brand: 'Fujifilm',
+                name: 'Fujifilm X100V',
+                category: 'fujifilm',
+                emoji: '📷',
+                year: '2020',
+                description: '富士 X100V 是高端固定镜头相机的代表，复古造型搭配现代性能。独特的混合取景器和出色的 23mm f/2 镜头，是街拍摄影师的宠儿。',
+                specs: {
+                    '传感器': '2610 万像素 APS-C X-Trans IV',
+                    '镜头': '富士龙 23mm f/2 R WR',
+                    '取景器': '混合光学/电子取景器',
+                    '对焦': '425 点混合 AF',
+                    '视频': '4K 30fps',
+                    '重量': '478g'
+                }
+            },
+            {
+                id: 12,
+                brand: 'Hasselblad',
+                name: 'Hasselblad X2D 100C',
+                category: 'hasselblad',
+                emoji: '📸',
+                year: '2022',
+                description: '哈苏 X2D 100C 是中画幅无反相机的新旗舰，1 亿像素带来极致细节。内置 1TB 存储和 HB 电池系统，为专业商业摄影而生。',
+                specs: {
+                    '传感器': '1 亿像素中画幅 43.8×32.9mm',
+                    '处理器': 'XCD',
+                    '对焦': '反差检测 AF',
+                    '连拍': '最高 3.3 张/秒',
+                    '存储': '内置 1TB SSD',
+                    '重量': '920g'
+                }
+            },
+            {
+                id: 13,
+                brand: 'Panasonic',
+                name: 'Panasonic Lumix S1H',
+                category: 'panasonic',
+                emoji: '📹',
+                year: '2019',
+                description: '松下 Lumix S1H 是第一台获得 Netflix 认证的全画幅无反相机，视频性能堪称电影级。双原生 ISO 技术带来惊人的动态范围和低光表现。',
+                specs: {
+                    '传感器': '2420 万像素全画幅 CMOS',
+                    '处理器': 'Venus Engine',
+                    '对焦': '225 点 DFD 反差对焦',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '6K 24fps / 5.9K 30fps',
+                    '重量': '1079g'
+                }
+            },
+            {
+                id: 14,
+                brand: 'Panasonic',
+                name: 'Panasonic GH6',
+                category: 'panasonic',
+                emoji: '📹',
+                year: '2022',
+                description: '松下 GH6 是 M43 系统的视频旗舰，支持 ProRes 内录和 RAW 输出。无限录制时间和出色的散热设计，是专业视频工作者的利器。',
+                specs: {
+                    '传感器': '2520 万像素 M43 Live MOS',
+                    '处理器': 'Venus Engine',
+                    '对焦': '315 点 DFD II 对焦',
+                    '连拍': '最高 14 张/秒',
+                    '视频': '5.7K 60fps / 4K 120fps',
+                    '重量': '739g'
+                }
+            },
+            {
+                id: 17,
+                brand: 'Panasonic',
+                name: 'Panasonic Lumix S5M2',
+                category: 'panasonic',
+                emoji: '📷',
+                year: '2023',
+                description: '松下 S5M2 是首款搭载相位混合对焦的全画幅微单，解决了松下长期以来对焦性能的短板。双原生 ISO 和出色的色彩科学，是视频创作者的高性价比之选。',
+                specs: {
+                    '传感器': '2420 万像素全画幅 CMOS',
+                    '处理器': 'BIONZ XR',
+                    '对焦': '779 点相位混合 AF',
+                    '连拍': '最高 30 张/秒',
+                    '视频': '6K 10bit 4:2:2 / 5.9K 60fps',
+                    '重量': '740g'
+                }
+            },
+            {
+                id: 18,
+                brand: 'Panasonic',
+                name: 'Panasonic Lumix G85',
+                category: 'panasonic',
+                emoji: '📸',
+                year: '2016',
+                description: '松下 G85 是性价比极高的 M43 中端相机，机身防抖和全天候机身设计。对于入门视频拍摄和摄影爱好者来说，是极具吸引力的选择。',
+                specs: {
+                    '传感器': '1600 万像素 M43 Live MOS',
+                    '处理器': 'Venus Engine',
+                    '对焦': '49 点对比度 AF',
+                    '连拍': '最高 9 张/秒',
+                    '视频': '4K 30fps',
+                    '重量': '505g'
+                }
+            },
+            {
+                id: 15,
+                brand: 'Olympus',
+                name: 'Olympus OM-D E-M1 Mark III',
+                category: 'olympus',
+                emoji: '📷',
+                year: '2020',
+                description: '奥林巴斯 E-M1 Mark III 是 M43 系统的旗舰相机，拥有业界最强的防抖性能（7.5 档）。计算摄影功能强大，支持高分辨率拍摄模式。',
+                specs: {
+                    '传感器': '2040 万像素 M43 Live MOS',
+                    '处理器': 'TruePic VIII',
+                    '对焦': '121 点全十字相位 AF',
+                    '连拍': '最高 60 张/秒',
+                    '防抖': '5 轴 7.5 档补偿',
+                    '重量': '580g'
+                }
+            },
+            {
+                id: 16,
+                brand: 'Olympus',
+                name: 'Olympus PEN F',
+                category: 'olympus',
+                emoji: '📸',
+                year: '2016',
+                description: '奥林巴斯 PEN F 是复古旁轴造型的文艺相机，向 1963 年的经典胶片相机致敬。独特的单色配置文件和创意转盘，让摄影充满乐趣。',
+                specs: {
+                    '传感器': '2030 万像素 M43 CMOS',
+                    '处理器': 'TruePic VII',
+                    '对焦': '81 点对比度 AF',
+                    '快门': '1/8000s 机械快门',
+                    '取景器': '236 万点电子取景器',
+                    '重量': '427g'
+                }
+            },
+            // ==================== 索尼新增机型 ====================
+            {
+                id: 19,
+                brand: 'Sony',
+                name: 'Sony A7 IV (A7M4)',
+                category: 'sony',
+                emoji: '📷',
+                year: '2021',
+                description: '索尼 A7 IV 是最受欢迎的全画幅微单之一，均衡的性能和合理的定价让它成为众多摄影师的主力机。3300 万像素传感器和升级的对焦系统，适合各种拍摄场景。',
+                specs: {
+                    '传感器': '3300 万像素全画幅 Exmor R',
+                    '处理器': 'BIONZ XR',
+                    '对焦': '759 点实时追踪 AF',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '4K 60fps / 10bit 4:2:2',
+                    '重量': '658g'
+                }
+            },
+            {
+                id: 20,
+                brand: 'Sony',
+                name: 'Sony A7 V (A7M5)',
+                category: 'sony',
+                emoji: '📸',
+                year: '2024',
+                description: '索尼 A7 V 是 2024 年最新发布的六边形战士，搭载 3300 万像素背照式传感器和最新 AI 对焦芯片。AI 智能识别主体，对焦性能达到新高度，是内容创作者的理想选择。',
+                specs: {
+                    '传感器': '3300 万像素背照式全画幅',
+                    '处理器': 'BIONZ XR + AI 芯片',
+                    '对焦': 'AI 智能主体识别 759 点',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '4K 60fps 10bit / S-Cinetone',
+                    '重量': '720g'
+                }
+            },
+            {
+                id: 21,
+                brand: 'Sony',
+                name: 'Sony A7C II',
+                category: 'sony',
+                emoji: '📷',
+                year: '2023',
+                description: '索尼 A7C II 将 A7M4 的核心性能塞进紧凑机身，是便携全画幅的新选择。适合旅行摄影师和 Vlogger，轻便但不妥协画质。',
+                specs: {
+                    '传感器': '3300 万像素全画幅 Exmor R',
+                    '处理器': 'BIONZ XR',
+                    '对焦': '759 点实时追踪 AF',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '4K 60fps / 10bit 4:2:2',
+                    '重量': '514g'
+                }
+            },
+            {
+                id: 22,
+                brand: 'Sony',
+                name: 'Sony A6700',
+                category: 'sony',
+                emoji: '📸',
+                year: '2023',
+                description: '索尼 A6700 是 APS-C 画幅的旗舰微单，搭载与 A7R V 相同的 AI 对焦芯片。2600 万像素和出色的视频性能，是入门全画幅的优质替代方案。',
+                specs: {
+                    '传感器': '2600 万像素 APS-C Exmor R',
+                    '处理器': 'BIONZ XR + AI 芯片',
+                    '对焦': 'AI 智能主体识别 759 点',
+                    '连拍': '最高 11 张/秒',
+                    '视频': '4K 120fps / 10bit 4:2:2',
+                    '重量': '493g'
+                }
+            },
+            // ==================== 佳能新增机型 ====================
+            {
+                id: 23,
+                brand: 'Canon',
+                name: 'Canon EOS R6 Mark II',
+                category: 'canon',
+                emoji: '📷',
+                year: '2022',
+                description: '佳能 R6 II 是均衡的全画幅水桶机，2420 万像素对于大多数用户来说足够使用。第二代双像素对焦和 40 张/秒电子连拍，适合运动和生态摄影。',
+                specs: {
+                    '传感器': '2420 万像素全画幅 CMOS',
+                    '处理器': 'DIGIC X',
+                    '对焦': '1053 点双像素 CMOS AF II',
+                    '连拍': '最高 40 张/秒 (电子)',
+                    '视频': '4K 60fps / 6K RAW 输出',
+                    '重量': '670g'
+                }
+            },
+            {
+                id: 24,
+                brand: 'Canon',
+                name: 'Canon EOS R8',
+                category: 'canon',
+                emoji: '📸',
+                year: '2023',
+                description: '佳能 R8 是最轻量级的全画幅无反相机，机身仅 461 克。搭载与 R6 II 相同的传感器和对焦系统，是入门全画幅的超值选择。',
+                specs: {
+                    '传感器': '2420 万像素全画幅 CMOS',
+                    '处理器': 'DIGIC X',
+                    '对焦': '1053 点双像素 CMOS AF II',
+                    '连拍': '最高 40 张/秒 (电子)',
+                    '视频': '4K 60fps / 6K RAW 输出',
+                    '重量': '461g'
+                }
+            },
+            {
+                id: 25,
+                brand: 'Canon',
+                name: 'Canon EOS R5 Mark II',
+                category: 'canon',
+                emoji: '📷',
+                year: '2024',
+                description: '佳能 R5 II 是 2024 年发布的旗舰高像素机型，4500 万像素堆叠式传感器和 AI 对焦。8K 60fps 视频录制和机身防抖，是专业摄影师的终极武器。',
+                specs: {
+                    '传感器': '4500 万像素堆叠式全画幅',
+                    '处理器': 'DIGIC Accelerator',
+                    '对焦': 'AI 智能主体识别 1053 点',
+                    '连拍': '最高 30 张/秒',
+                    '视频': '8K 60fps / 4K 120fps',
+                    '重量': '738g'
+                }
+            },
+            {
+                id: 26,
+                brand: 'Canon',
+                name: 'Canon EOS R1',
+                category: 'canon',
+                emoji: '📸',
+                year: '2024',
+                description: '佳能 R1 是佳能 EOS R 系统的终极旗舰，为体育和新闻摄影而生。2400 万像素堆叠式传感器，30 张/秒无黑屏连拍，是专业摄影师的可靠伙伴。',
+                specs: {
+                    '传感器': '2420 万像素堆叠式全画幅',
+                    '处理器': 'DIGIC Accelerator',
+                    '对焦': 'AI 智能主体识别 1026 点',
+                    '连拍': '最高 40 张/秒',
+                    '视频': '6K 60fps / 4K 120fps',
+                    '重量': '1235g'
+                }
+            },
+            // ==================== 尼康新增机型 ====================
+            {
+                id: 27,
+                brand: 'Nikon',
+                name: 'Nikon Z8',
+                category: 'nikon',
+                emoji: '📷',
+                year: '2023',
+                description: '尼康 Z8 被称为"小 Z9"，在更紧凑的机身中提供了与 Z9 相同的性能。4570 万像素堆叠式传感器和 8K 视频，是专业和业余摄影师的理想选择。',
+                specs: {
+                    '传感器': '4570 万像素堆叠式全画幅',
+                    '处理器': 'EXPEED 7',
+                    '对焦': '3D 追踪 AF 493 点',
+                    '连拍': '最高 120 张/秒',
+                    '视频': '8K 60fps / 4K 120fps',
+                    '重量': '910g'
+                }
+            },
+            {
+                id: 28,
+                brand: 'Nikon',
+                name: 'Nikon Z6 III',
+                category: 'nikon',
+                emoji: '📸',
+                year: '2024',
+                description: '尼康 Z6 III 是 2024 年发布的均衡型全画幅微单，部分堆叠式传感器带来更快的读取速度。2450 万像素适合日常拍摄和视频创作。',
+                specs: {
+                    '传感器': '2450 万像素部分堆叠式全画幅',
+                    '处理器': 'EXPEED 7',
+                    '对焦': '493 点混合 AF',
+                    '连拍': '最高 20 张/秒',
+                    '视频': '6K 60fps / 4K 120fps',
+                    '重量': '760g'
+                }
+            },
+            {
+                id: 29,
+                brand: 'Nikon',
+                name: 'Nikon Zf',
+                category: 'nikon',
+                emoji: '📷',
+                year: '2023',
+                description: '尼康 Zf 是复古造型的全画幅微单，向经典的 FM2 胶片相机致敬。2450 万像素和出色的操控体验，是颜值与性能并存的选择。',
+                specs: {
+                    '传感器': '2450 万像素全画幅 CMOS',
+                    '处理器': 'EXPEED 6',
+                    '对焦': '273 点混合 AF',
+                    '连拍': '最高 14 张/秒',
+                    '视频': '4K 60fps',
+                    '重量': '710g'
+                }
+            },
+            // ==================== 富士新增机型 ====================
+            {
+                id: 30,
+                brand: 'Fujifilm',
+                name: 'Fujifilm X-T5',
+                category: 'fujifilm',
+                emoji: '📸',
+                year: '2022',
+                description: '富士 X-T5 回归经典的拨盘操控设计，4000 万像素 APS-C 传感器带来极致细节。胶片模拟模式让直出色彩令人惊艳。',
+                specs: {
+                    '传感器': '4000 万像素 APS-C X-Trans V',
+                    '处理器': 'X-Processor 5',
+                    '对焦': '425 点混合 AF',
+                    '连拍': '最高 15 张/秒',
+                    '视频': '6.2K 30fps / 4K 60fps',
+                    '重量': '557g'
+                }
+            },
+            {
+                id: 31,
+                brand: 'Fujifilm',
+                name: 'Fujifilm X-H2S',
+                category: 'fujifilm',
+                emoji: '📷',
+                year: '2022',
+                description: '富士 X-H2S 是富士的旗舰速度机型，堆叠式传感器带来惊人的连拍和视频性能。适合体育、生态和专业视频拍摄。',
+                specs: {
+                    '传感器': '2610 万像素堆叠式 APS-C',
+                    '处理器': 'X-Processor 5',
+                    '对焦': '425 点混合 AF',
+                    '连拍': '最高 40 张/秒',
+                    '视频': '6.2K 30fps / 4K 120fps',
+                    '重量': '660g'
+                }
+            },
+            {
+                id: 32,
+                brand: 'Fujifilm',
+                name: 'Fujifilm X100VI',
+                category: 'fujifilm',
+                emoji: '📸',
+                year: '2024',
+                description: '富士 X100VI 是 2024 年最受期待的固定镜头相机，4000 万像素和机身防抖。复古造型和胶片模拟，是街拍和日常记录的理想伴侣。',
+                specs: {
+                    '传感器': '4000 万像素 APS-C X-Trans V',
+                    '镜头': '富士龙 23mm f/2 R WR',
+                    '防抖': '5 轴 6 档补偿',
+                    '对焦': '425 点混合 AF',
+                    '视频': '6.2K 30fps',
+                    '重量': '521g'
+                }
+            },
+            {
+                id: 33,
+                brand: 'Fujifilm',
+                name: 'Fujifilm GFX 100 II',
+                category: 'fujifilm',
+                emoji: '📷',
+                year: '2023',
+                description: '富士 GFX 100 II 是 1 亿像素中画幅旗舰，102MP 传感器带来惊人细节。重新设计的对焦系统和 8K 视频，重新定义中画幅的可能性。',
+                specs: {
+                    '传感器': '1.02 亿像素中画幅 43.8×32.9mm',
+                    '处理器': 'X-Processor 5',
+                    '对焦': '117 点混合 AF',
+                    '连拍': '最高 8 张/秒',
+                    '视频': '8K 30fps / 4K 60fps',
+                    '重量': '1030g'
+                }
+            },
+            // ==================== 徕卡新增机型 ====================
+            {
+                id: 34,
+                brand: 'Leica',
+                name: 'Leica Q3',
+                category: 'leica',
+                emoji: '📸',
+                year: '2023',
+                description: '徕卡 Q3 是全画幅固定镜头相机的新标杆，6000 万像素和 Summilux 28mm f/1.7 镜头。支持 8K 视频和微距模式，是高端随身机的首选。',
+                specs: {
+                    '传感器': '6000 万像素全画幅 BSI',
+                    '镜头': 'Summilux 28mm f/1.7 ASPH',
+                    '对焦': '混合 AF (相位 + 对比度)',
+                    '连拍': '最高 10 张/秒',
+                    '视频': '8K 30fps / 4K 120fps',
+                    '重量': '730g'
+                }
+            },
+            {
+                id: 35,
+                brand: 'Leica',
+                name: 'Leica M11',
+                category: 'leica',
+                emoji: '📷',
+                year: '2022',
+                description: '徕卡 M11 是旁轴相机的数码旗舰，6000 万像素和三重分辨率技术。经典的 M 系列操控和现代数码性能的结合。',
+                specs: {
+                    '传感器': '6000 万像素全画幅 BSI',
+                    '卡口': '徕卡 M 卡口',
+                    '存储': '64GB 内置 + SD 卡',
+                    '快门': '机械快门 1/4000s',
+                    '取景器': '0.68x 放大倍率',
+                    '重量': '640g'
+                }
+            },
+            // ==================== 哈苏新增机型 ====================
+            {
+                id: 36,
+                brand: 'Hasselblad',
+                name: 'Hasselblad 907X 50C',
+                category: 'hasselblad',
+                emoji: '📸',
+                year: '2019',
+                description: '哈苏 907X 50C 是可翻转触屏的中画幅无反相机，支持 CF 卡口镜头和 XCD 镜头。5000 万像素和哈苏自然色彩解决方案 (HNCS)。',
+                specs: {
+                    '传感器': '5000 万像素中画幅 43.8×32.9mm',
+                    '处理器': 'HTS 2.0',
+                    '对焦': '对比度检测 AF',
+                    '连拍': '最高 2.7 张/秒',
+                    '屏幕': '3.6 英寸翻转触屏',
+                    '重量': '647g'
+                }
+            },
+            // ==================== 奥林巴斯新增机型 ====================
+            {
+                id: 37,
+                brand: 'Olympus',
+                name: 'Olympus OM-1',
+                category: 'olympus',
+                emoji: '📷',
+                year: '2022',
+                description: '奥林巴斯 OM-1 是 M43 系统的终极旗舰，堆叠式 BSI 传感器和最新的 TruePic X 处理器。强大的计算摄影功能和全天候机身，是生态和运动摄影的利器。',
+                specs: {
+                    '传感器': '2040 万像素堆叠式 M43',
+                    '处理器': 'TruePic X',
+                    '对焦': '1053 点全十字 Quad AF',
+                    '连拍': '最高 120 张/秒',
+                    '防抖': '5 轴 8 档补偿',
+                    '重量': '599g'
+                }
+            },
+            // ==================== 松下新增机型 ====================
+            {
+                id: 38,
+                brand: 'Panasonic',
+                name: 'Panasonic S9',
+                category: 'panasonic',
+                emoji: '📸',
+                year: '2024',
+                description: '松下 S9 是 2024 年发布的最轻量级全画幅相机，机身仅 473 克。搭载与 S5M2 相同的传感器，支持 L 卡口镜头群，是便携全画幅的新选择。',
+                specs: {
+                    '传感器': '2420 万像素全画幅 CMOS',
+                    '处理器': 'BIONZ XR',
+                    '对焦': '779 点相位混合 AF',
+                    '连拍': '最高 30 张/秒',
+                    '视频': '6K 10bit / 4K 60fps',
+                    '重量': '473g'
+                }
+            }
+        ];
+
+        let currentCategory = 'all';
+        let filteredCameras = [...cameras];
+
+        // 渲染相机卡片
+        function renderCameras() {
+            const track = document.getElementById('showcaseTrack');
+            track.innerHTML = filteredCameras.map(camera => `
+                <div class="camera-card" onclick="openModal(${camera.id})">
+                    <div class="camera-image">
+                        ${camera.emoji}
+                    </div>
+                    <div class="camera-info">
+                        <div class="camera-brand">${camera.brand}</div>
+                        <h3 class="camera-name">${camera.name}</h3>
+                        <div class="camera-preview">
+                            <span class="spec-tag">${Object.values(camera.specs)[0]}</span>
+                            <span class="spec-tag">${camera.year}年</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 滚动展示
+        function scrollShowcase(direction) {
+            const track = document.getElementById('showcaseTrack');
+            const cardWidth = 430; // 卡片宽度 + 间距
+            const currentScroll = parseInt(track.style.transform.replace('translateX(', '').replace('px)', '') || 0);
+            const maxScroll = track.scrollWidth - track.parentElement.clientWidth;
+
+            let newScroll = currentScroll - (direction * cardWidth);
+            newScroll = Math.max(-maxScroll, Math.min(0, newScroll));
+
+            track.style.transform = `translateX(${newScroll}px)`;
+        }
+
+        // 打开模态框
+        function openModal(cameraId) {
+            const camera = cameras.find(c => c.id === cameraId);
+            if (!camera) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="modal-image">
+                    ${camera.emoji}
+                </div>
+                <div class="modal-details">
+                    <div class="modal-brand">${camera.brand}</div>
+                    <h2>${camera.name}</h2>
+                    <p class="modal-description">${camera.description}</p>
+                    <div class="specs-grid">
+                        ${Object.entries(camera.specs).map(([key, value]) => `
+                            <div class="spec-item">
+                                <div class="spec-label">${key}</div>
+                                <div class="spec-value">${value}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const modal = document.getElementById('cameraModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.getElementById('cameraModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('cameraModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 键盘关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 分类过滤
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const category = this.dataset.category;
+                currentCategory = category;
+
+                filteredCameras = category === 'all'
+                    ? [...cameras]
+                    : cameras.filter(c => c.category === category);
+
+                renderCameras();
+
+                // 重置滚动位置
+                document.getElementById('showcaseTrack').style.transform = 'translateX(0)';
+            });
+        });
+
+        // 初始化
+        renderCameras();
+    </script>
+</body>
+</html>
