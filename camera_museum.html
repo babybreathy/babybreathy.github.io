@@ -111,7 +111,13 @@
             display: flex;
             gap: 30px;
             padding: 20px 50px;
-            transition: transform 0.5s ease;
+            transition: transform 0.3s ease;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .showcase-track:active {
+            cursor: grabbing;
         }
 
         .camera-card {
@@ -1144,6 +1150,7 @@
 
         let currentCategory = 'all';
         let filteredCameras = [...cameras];
+        let currentTranslateX = 0;
 
         // 渲染相机卡片
         function renderCameras() {
@@ -1169,13 +1176,63 @@
         function scrollShowcase(direction) {
             const track = document.getElementById('showcaseTrack');
             const cardWidth = 430; // 卡片宽度 + 间距
-            const currentScroll = parseInt(track.style.transform.replace('translateX(', '').replace('px)', '') || 0);
             const maxScroll = track.scrollWidth - track.parentElement.clientWidth;
 
-            let newScroll = currentScroll - (direction * cardWidth);
+            let newScroll = currentTranslateX - (direction * cardWidth);
             newScroll = Math.max(-maxScroll, Math.min(0, newScroll));
+            currentTranslateX = newScroll;
 
             track.style.transform = `translateX(${newScroll}px)`;
+        }
+
+        // 鼠标拖动滑动功能
+        const showcaseContainer = document.querySelector('.showcase-container');
+        const showcaseTrack = document.getElementById('showcaseTrack');
+        let isDragging = false;
+        let startX = 0;
+        let dragStartTime = 0;
+
+        showcaseContainer.addEventListener('mousedown', dragStart);
+        showcaseContainer.addEventListener('touchstart', dragStart);
+
+        showcaseContainer.addEventListener('mousemove', dragMove);
+        showcaseContainer.addEventListener('touchmove', dragMove);
+
+        showcaseContainer.addEventListener('mouseup', dragEnd);
+        showcaseContainer.addEventListener('mouseleave', dragEnd);
+        showcaseContainer.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            isDragging = true;
+            dragStartTime = Date.now();
+            startX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+            showcaseTrack.style.transition = 'none';
+        }
+
+        function dragMove(e) {
+            if (!isDragging) return;
+
+            const x = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const diff = x - startX;
+            const maxScroll = showcaseTrack.scrollWidth - showcaseContainer.clientWidth;
+
+            currentTranslateX = Math.max(-maxScroll, Math.min(0, currentTranslateX + diff));
+            showcaseTrack.style.transform = `translateX(${currentTranslateX}px)`;
+            startX = x;
+        }
+
+        function dragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            showcaseTrack.style.transition = 'transform 0.3s ease';
+
+            // 判断是否是点击（而非拖动）
+            const dragDuration = Date.now() - dragStartTime;
+            if (dragDuration < 200) {
+                // 保存当前滚动位置
+                const maxScroll = showcaseTrack.scrollWidth - showcaseContainer.clientWidth;
+                currentTranslateX = Math.max(-maxScroll, Math.min(0, currentTranslateX));
+            }
         }
 
         // 打开模态框
@@ -1245,6 +1302,7 @@
                 renderCameras();
 
                 // 重置滚动位置
+                currentTranslateX = 0;
                 document.getElementById('showcaseTrack').style.transform = 'translateX(0)';
             });
         });
