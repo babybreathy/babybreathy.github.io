@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帮你做选择 - 决策滚筒</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --accent-color: #00cec9;
+            --bg-dark: #0c0c1e;
+            --bg-card: #1a1a3e;
+            --text-primary: #ffffff;
+            --text-secondary: #b2b2b2;
+            --wood-light: #d4a574;
+            --wood-medium: #a67c52;
+            --wood-dark: #8b5a2b;
+            --wood-darker: #5c3a1e;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(12, 12, 30, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .back-btn {
+            padding: 10px 25px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.5);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 120px 20px 50px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .wheel-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drum-machine {
+            position: relative;
+            width: 320px;
+            height: 400px;
+        }
+
+        .drum-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(90deg, var(--wood-dark) 0px, var(--wood-medium) 2px, var(--wood-dark) 4px, var(--wood-darker) 6px);
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5), 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 5px var(--wood-darker), 0 0 0 10px var(--wood-dark);
+        }
+
+        .drum-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .drum-window {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 15%, rgba(0,0,0,0.2) 35%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.2) 65%, rgba(0,0,0,0.6) 85%, rgba(0,0,0,0.9) 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(100, 50, 0, 0.5);
+        }
+
+        .selection-box {
+            position: absolute;
+            top: 61%;
+            left: 5%;
+            right: 5%;
+            height: 80px;
+            transform: translateY(-50%);
+            background: linear-gradient(180deg, rgba(255, 215, 0, 0) 0%, rgba(255, 215, 0, 0.15) 20%, rgba(255, 215, 0, 0.25) 50%, rgba(255, 215, 0, 0.15) 80%, rgba(255, 215, 0, 0) 100%);
+            border-top: 3px solid rgba(255, 215, 0, 0.6);
+            border-bottom: 3px solid rgba(255, 215, 0, 0.6);
+            pointer-events: none;
+            z-index: 10;
+            border-radius: 5px;
+        }
+
+        .drum-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drum-belt {
+            position: absolute;
+            left: 0;
+            width: 100%;
+        }
+
+        .drum-item {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #fff8e7;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid rgba(139, 90, 43, 0.4);
+        }
+
+        .drum-side {
+            position: absolute;
+            top: 50%;
+            width: 40px;
+            height: 320px;
+            background: repeating-linear-gradient(0deg, var(--wood-dark) 0px, var(--wood-medium) 3px, var(--wood-dark) 6px);
+            transform: translateY(-50%);
+            border-radius: 10px 0 0 10px;
+            box-shadow: inset 5px 0 20px rgba(0, 0, 0, 0.5), 5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .drum-side.left {
+            left: -50px;
+        }
+
+        .drum-side.right {
+            right: -50px;
+            border-radius: 0 10px 10px 0;
+            box-shadow: inset -5px 0 20px rgba(0, 0, 0, 0.5), -5px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .metal-stud {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #b8860b);
+            border-radius: 50%;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .button-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .spin-button {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #c0392b);
+            box-shadow: 0 15px 40px rgba(192, 57, 43, 0.5), inset 0 5px 20px rgba(255, 255, 255, 0.3), inset 0 -5px 20px rgba(0, 0, 0, 0.3), 0 8px 0 #922b21, 0 15px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+
+        .spin-button::before {
+            content: '🎰';
+            font-size: 60px;
+        }
+
+        .spin-button:hover {
+            transform: translateY(-5px);
+        }
+
+        .spin-button:active {
+            transform: translateY(8px);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spin-label {
+            font-size: 18px;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+        }
+
+        .result-display {
+            background: linear-gradient(145deg, var(--wood-medium), var(--wood-dark));
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 30px;
+            min-width: 350px;
+            border: 3px solid var(--wood-darker);
+        }
+
+        .result-display h3 {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .result-text {
+            font-size: 42px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 2px 2px 5px rgba(0, 0, 0, 0.8);
+            min-height: 60px;
+        }
+
+        .result-text.show {
+            animation: resultPop 0.5s ease;
+        }
+
+        @keyframes resultPop {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .category-selector, .custom-options, .history-panel {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .category-selector h3, .custom-options h3, .history-panel h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .category-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .category-btn {
+            padding: 15px 20px;
+            background: rgba(108, 92, 231, 0.2);
+            border: 2px solid rgba(108, 92, 231, 0.3);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .category-btn.active {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            border-color: var(--accent-color);
+        }
+
+        .option-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .option-input {
+            flex: 1;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-primary);
+        }
+
+        .option-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .add-btn {
+            padding: 12px 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .options-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .option-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(108, 92, 231, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .option-tag .remove {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .history-panel h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-history {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 5px;
+            color: var(--wheel-red);
+            cursor: pointer;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .history-item .value {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .history-item .time {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 30px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confettiFall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* 页脚 */
+        footer {
+            padding: 50px;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 50px;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+
+    <nav>
+        <a href="index.html" class="logo">🎯 帮你做选择</a>
+        <a href="index.html" class="back-btn">← 返回首页</a>
+    </nav>
+
+    <div class="container">
+        <div class="wheel-section">
+            <div class="drum-machine">
+                <div class="drum-side left" id="drumSideLeft"></div>
+                <div class="drum-frame">
+                    <div class="drum-window">
+                        <div class="selection-box"></div>
+                        <div class="drum-viewport">
+                            <div class="drum-belt" id="drumBelt"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="drum-side right" id="drumSideRight"></div>
+            </div>
+
+            <div class="button-section">
+                <button class="spin-button" id="spinBtn"></button>
+                <span class="spin-label">点击开始选择</span>
+            </div>
+
+            <div class="result-display">
+                <h3>🎉 选择结果</h3>
+                <div class="result-text" id="resultText">等待开始...</div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <div class="category-selector">
+                <h3>📋 选择类别</h3>
+                <div class="category-buttons">
+                    <button class="category-btn active" data-category="china-cities">🌍 国内城市</button>
+                    <button class="category-btn" data-category="world-cities">🌍 世界城市</button>
+                    <button class="category-btn" data-category="exam">📝 考试选项</button>
+                    <button class="category-btn" data-category="food">🍽️ 吃什么</button>
+                    <button class="category-btn" data-category="custom">✏️ 自定义</button>
+                </div>
+            </div>
+
+            <div class="custom-options">
+                <h3>✏️ 自定义选项</h3>
+                <div class="option-input-group">
+                    <input type="text" class="option-input" id="optionInput" placeholder="输入选项内容..." maxlength="20">
+                    <button class="add-btn" id="addOptionBtn">添加</button>
+                </div>
+                <div class="options-list" id="optionsList"></div>
+            </div>
+
+            <div class="history-panel">
+                <h3>
+                    📜 历史选择
+                    <button class="clear-history" id="clearHistory">清空</button>
+                </h3>
+                <div class="history-list" id="historyList">
+                    <div class="history-empty">暂无历史记录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2026 dx 的空间站 - 帮你做选择。All rights reserved.</p>
+    </footer>
+
+    <script>
+        const categories = {
+            'china-cities': {
+                name: '国内城市',
+                options: ['北京', '上海', '广州', '深圳', '成都', '杭州', '南京', '武汉', '西安', '重庆', '天津', '苏州', '青岛', '厦门', '大连', '昆明', '长沙', '郑州', '济南', '合肥', '福州', '宁波', '无锡', '佛山', '东莞', '沈阳', '哈尔滨', '长春', '石家庄', '太原', '南昌', '贵阳', '南宁', '海口', '拉萨', '乌鲁木齐', '呼和浩特', '银川', '西宁']
+            },
+            'world-cities': {
+                name: '世界城市',
+                options: ['东京', '纽约', '伦敦', '巴黎', '洛杉矶', '悉尼', '新加坡', '首尔', '曼谷', '迪拜', '柏林', '罗马', '马德里', '阿姆斯特丹', '维也纳', '布拉格', '布达佩斯', '莫斯科', '开罗', '开普敦', '里约热内卢', '多伦多', '温哥华', '旧金山', '芝加哥', '波士顿', '西雅图', '米兰', '巴塞罗那', '里斯本', '雅典', '伊斯坦布尔', '孟买', '雅加达', '吉隆坡', '马尼拉', '河内', '胡志明市', '奥克兰']
+            },
+            'exam': {
+                name: '考试选项',
+                options: ['A', 'B', 'C', 'D']
+            },
+            'food': {
+                name: '吃什么',
+                options: ['火锅', '烧烤', '披萨', '汉堡', '寿司', '拉面', '炒饭', '面条', '炸鸡', '牛排', '烤鱼', '冒菜', '麻辣烫', '沙县小吃', '兰州拉面', '肯德基', '麦当劳', '必胜客', '黄焖鸡', '螺蛳粉', '酸辣粉', '煲仔饭', '盖浇饭', '水饺', '馄饨', '包子', '煎饼', '肉夹馍', '川菜', '粤菜', '湘菜', '浙菜', '鲁菜', '苏菜', '闽菜', '徽菜', '泰餐', '韩餐', '日料', '西餐', '印度菜', '越南菜', '轻食沙拉']
+            },
+            'custom': {
+                name: '自定义',
+                options: JSON.parse(localStorage.getItem('wheelCustomOptions') || '["选项 1", "选项 2", "选项 3"]')
+            }
+        };
+
+        const ITEM_HEIGHT = 80;
+        const VIEW_HEIGHT = 400;
+        const CENTER_Y = VIEW_HEIGHT / 2; // 200px，中心线
+        // 选择框在 58% 位置，中心对齐需要：选项顶部在 VIEW_HEIGHT * 0.58 - ITEM_HEIGHT/2 位置
+        const ALIGN_OFFSET = VIEW_HEIGHT * 0.58 - ITEM_HEIGHT / 2; // 192px
+
+        let currentCategory = 'china-cities';
+        let currentOptions = [...categories['china-cities'].options];
+        let isSpinning = false;
+        let currentPosition = 0;
+        let virtualIndex = 0; // 虚拟索引，用于追踪当前位置对应的选项
+        let history = JSON.parse(localStorage.getItem('wheelHistory') || '[]');
+
+        const drumBelt = document.getElementById('drumBelt');
+        const drumSideLeft = document.getElementById('drumSideLeft');
+        const drumSideRight = document.getElementById('drumSideRight');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultText = document.getElementById('resultText');
+        const optionsList = document.getElementById('optionsList');
+        const historyList = document.getElementById('historyList');
+        const optionInput = document.getElementById('optionInput');
+        const addOptionBtn = document.getElementById('addOptionBtn');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const drumMachine = document.querySelector('.drum-machine');
+
+        function createStars() {
+            const container = document.getElementById('stars');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                container.appendChild(star);
+            }
+        }
+
+        function createStuds() {
+            drumSideLeft.innerHTML = '';
+            drumSideRight.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const studLeft = document.createElement('div');
+                studLeft.className = 'metal-stud';
+                studLeft.style.top = (50 + i * 65) + 'px';
+                studLeft.style.left = '10px';
+                drumSideLeft.appendChild(studLeft);
+
+                const studRight = document.createElement('div');
+                studRight.className = 'metal-stud';
+                studRight.style.top = (50 + i * 65) + 'px';
+                studRight.style.right = '10px';
+                drumSideRight.appendChild(studRight);
+            }
+        }
+
+        // 获取选项（循环）
+        function getOption(index) {
+            const n = currentOptions.length;
+            return currentOptions[((index % n) + n) % n];
+        }
+
+        // 构建滚筒带 - 使用无缝循环技术
+        function buildBelt() {
+            drumBelt.innerHTML = '';
+
+            // 创建足够多的选项：需要覆盖旋转全程
+            // 滚动 100 步 + 最多 1 圈缓冲 + 可视区域缓冲
+            const totalItems = 200;
+            const startIndex = 0;
+
+            for (let i = startIndex; i < startIndex + totalItems; i++) {
+                const el = document.createElement('div');
+                el.className = 'drum-item';
+                el.textContent = getOption(i);
+
+                const optIndex = ((i % currentOptions.length) + currentOptions.length) % currentOptions.length;
+                const hue = (optIndex * 360 / currentOptions.length) % 360;
+                el.style.background = `linear-gradient(180deg, hsla(${hue}, 60%, 45%, 0.4) 0%, hsla(${hue}, 60%, 55%, 0.15) 50%, hsla(${hue}, 60%, 45%, 0.4) 100%)`;
+
+                drumBelt.appendChild(el);
+            }
+
+            // 初始位置：让索引 0 的选项对齐到选择框中心
+            virtualIndex = 0;
+            currentPosition = ALIGN_OFFSET;
+            drumBelt.style.transform = `translateY(${currentPosition}px)`;
+
+            // 重置 transition
+            drumBelt.style.transition = '';
+        }
+
+        // 切换分类
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isSpinning) return;
+
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                currentCategory = btn.dataset.category;
+
+                // 如果是自定义类别，从 localStorage 读取
+                if (currentCategory === 'custom') {
+                    currentOptions = JSON.parse(localStorage.getItem('wheelCustomOptions') || '["选项 1", "选项 2", "选项 3"]');
+                } else {
+                    currentOptions = [...categories[currentCategory].options];
+                }
+                buildBelt();
+                updateOptionsList();
+            });
+        });
+
+        // 保存自定义选项到 localStorage
+        function saveCustomOptions() {
+            if (currentCategory === 'custom') {
+                localStorage.setItem('wheelCustomOptions', JSON.stringify(currentOptions));
+            }
+        }
+
+        // 更新选项列表
+        function updateOptionsList() {
+            optionsList.innerHTML = '';
+            currentOptions.forEach((option, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'option-tag';
+                tag.innerHTML = `${option}<span class="remove" data-index="${index}">×</span>`;
+                optionsList.appendChild(tag);
+            });
+
+            optionsList.querySelectorAll('.remove').forEach(remove => {
+                remove.addEventListener('click', (e) => {
+                    if (isSpinning) return;
+                    const index = parseInt(e.target.dataset.index);
+                    if (currentOptions.length > 2) {
+                        currentOptions.splice(index, 1);
+                        updateOptionsList();
+                        buildBelt();
+                        saveCustomOptions();
+                    } else {
+                        alert('至少需要保留两个选项');
+                    }
+                });
+            });
+        }
+
+        // 添加选项
+        addOptionBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            const value = optionInput.value.trim();
+            if (value) {
+                currentOptions.push(value);
+                optionInput.value = '';
+                updateOptionsList();
+                buildBelt();
+                saveCustomOptions();
+            }
+        });
+
+        optionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addOptionBtn.click();
+        });
+
+        // 缓动函数 - 平滑减速，无回弹
+        function easeOutQuart(t) {
+            return 1 - Math.pow(1 - t, 4);
+        }
+
+        // 旋转
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning || currentOptions.length < 2) return;
+
+            isSpinning = true;
+            spinBtn.disabled = true;
+            resultText.classList.remove('show');
+            resultText.textContent = '🎲 选择中...';
+
+            // 随机选择结果索引
+            const resultIndex = Math.floor(Math.random() * currentOptions.length);
+            const optionCount = currentOptions.length;
+
+            const minSteps = 80; // 至少滚动 80 个选项
+
+            // 目标虚拟索引：从当前位置向下滚动
+            // 确保 targetVirtualIndex % optionCount === resultIndex
+            const baseTarget = virtualIndex + minSteps;
+            const currentOptIndex = ((baseTarget % optionCount) + optionCount) % optionCount;
+            let stepsToResult = (resultIndex - currentOptIndex + optionCount) % optionCount;
+            if (stepsToResult === 0) {
+                stepsToResult = optionCount;
+            }
+            const targetVirtualIndex = baseTarget + stepsToResult;
+
+            // 目标位置：向下滚动，让目标选项停在中心选择框
+            // 选项 targetVirtualIndex 需要移动到 ALIGN_OFFSET 位置
+            const targetPosition = -targetVirtualIndex * ITEM_HEIGHT + ALIGN_OFFSET;
+
+            // 使用 CSS transition 做动画
+            drumBelt.style.transition = `transform 4s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+            drumBelt.style.transform = `translateY(${targetPosition}px)`;
+
+            // 动画结束后
+            setTimeout(() => {
+                drumBelt.style.transition = '';
+                isSpinning = false;
+                spinBtn.disabled = false;
+                currentPosition = targetPosition;
+                virtualIndex = targetVirtualIndex;
+
+                // 计算最终停在中心的选项
+                const finalOptIndex = ((targetVirtualIndex % optionCount) + optionCount) % optionCount;
+                const finalResult = currentOptions[finalOptIndex];
+
+                // 显示结果
+                resultText.textContent = finalResult;
+                resultText.classList.add('show');
+
+                addToHistory(finalResult);
+                createConfetti();
+            }, 4000);
+        });
+
+        // 历史记录
+        function addToHistory(value) {
+            const now = new Date();
+            const time = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            history.unshift({ value, time, category: categories[currentCategory].name });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('wheelHistory', JSON.stringify(history));
+            updateHistoryList();
+        }
+
+        function updateHistoryList() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="history-empty">暂无历史记录</div>';
+                return;
+            }
+            historyList.innerHTML = '';
+            history.forEach((item) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `<span class="value">${item.value}</span><span class="time">${item.time} · ${item.category}</span>`;
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('确定要清空历史记录吗？')) {
+                history = [];
+                localStorage.removeItem('wheelHistory');
+                updateHistoryList();
+            }
+        });
+
+        // 彩带效果
+        function createConfetti() {
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 4000);
+                }, i * 30);
+            }
+        }
+
+        // 初始化
+        createStars();
+        createStuds();
+        buildBelt();
+        updateOptionsList();
+        updateHistoryList();
+    </script>
+</body>
+</html>
