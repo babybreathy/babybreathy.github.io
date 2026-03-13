@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>美食指南 - dx 的空间站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #ffa502;
+            --accent-color: #ff7f50;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #ffffff;
+            --text-secondary: #b2b2b2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 星空背景 */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            padding: 120px 50px 50px;
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 页面标题 */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-title {
+            font-size: 48px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            max-width: 600px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 18px 25px;
+            padding-right: 60px;
+            font-size: 16px;
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            border-radius: 50px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* 分类标签 */
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+
+        .category-tag {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .category-tag:hover,
+        .category-tag.active {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-color: transparent;
+        }
+
+        /* 菜谱网格 */
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .recipe-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .recipe-image {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            position: relative;
+        }
+
+        .recipe-tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .recipe-content {
+            padding: 20px;
+        }
+
+        .recipe-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .recipe-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .recipe-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .recipe-ingredients {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .ingredient-tag {
+            padding: 4px 10px;
+            background: rgba(255, 107, 107, 0.2);
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--primary-color);
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--primary-color);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            padding: 40px;
+            text-align: center;
+        }
+
+        .modal-emoji {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .modal-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+
+        .modal-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .modal-section {
+            margin-bottom: 30px;
+        }
+
+        .modal-section-title {
+            font-size: 22px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ingredients-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .ingredient-item {
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ingredient-name {
+            color: var(--text-secondary);
+        }
+
+        .ingredient-amount {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .steps-list {
+            counter-reset: step;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+
+        .tips-box {
+            background: rgba(255, 165, 2, 0.1);
+            border: 1px solid var(--secondary-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .tips-title {
+            color: var(--secondary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tips-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* 返回主页按钮 */
+        .back-home {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .back-home:hover {
+            transform: scale(1.1);
+        }
+
+        /* 结果统计 */
+        .results-info {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            nav {
+                padding: 15px 20px;
+            }
+
+            .main-content {
+                padding: 100px 20px 30px;
+            }
+
+            .page-title {
+                font-size: 32px;
+            }
+
+            .recipes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .ingredients-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 星空背景 -->
+    <div class="stars" id="stars"></div>
+
+    <!-- 导航栏 -->
+    <nav>
+        <a href="index.html" class="logo">🚀 dx 的空间站</a>
+        <div class="nav-links">
+            <a href="index.html">返回首页</a>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">🍳 美食指南</h1>
+            <p class="page-subtitle">100+ 道家常菜谱，让你的厨艺更上一层楼</p>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchInput" placeholder="搜索食材，如：鸡蛋、西红柿、牛肉...（支持多食材搜索）">
+            <button class="search-btn" onclick="searchRecipes()">🔍</button>
+        </div>
+
+        <!-- 分类标签 -->
+        <div class="category-tags" id="categoryTags">
+            <span class="category-tag active" data-category="all">全部</span>
+            <span class="category-tag" data-category="chicken">🍗 禽肉</span>
+            <span class="category-tag" data-category="beef">🥩 牛肉</span>
+            <span class="category-tag" data-category="pork">🐷 猪肉</span>
+            <span class="category-tag" data-category="seafood">🦐 海鲜</span>
+            <span class="category-tag" data-category="vegetable">🥬 素菜</span>
+            <span class="category-tag" data-category="egg">🥚 蛋类</span>
+            <span class="category-tag" data-category="soup">🍲 汤品</span>
+            <span class="category-tag" data-category="staple">🍚 主食</span>
+            <span class="category-tag" data-category="cold">🥗 凉菜</span>
+        </div>
+
+        <!-- 结果统计 -->
+        <div class="results-info" id="resultsInfo">共 <span id="recipeCount">0</span> 道菜谱</div>
+
+        <!-- 菜谱网格 -->
+        <div class="recipes-grid" id="recipesGrid"></div>
+    </div>
+
+    <!-- 菜谱详情模态框 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-header">
+                <div class="modal-emoji" id="modalEmoji">🍳</div>
+                <h2 class="modal-title" id="modalTitle">菜名</h2>
+                <div class="modal-meta" id="modalMeta"></div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 返回主页 -->
+    <a href="index.html" class="back-home" title="返回首页">🏠</a>
+
+    <script>
+        // 菜谱数据 - 120 道家常菜
+        const recipes = [
+            // 鸡蛋类 (15 道)
+            {
+                id: 1,
+                name: "西红柿炒鸡蛋",
+                emoji: "🍅",
+                category: "egg",
+                difficulty: "简单",
+                time: "10 分钟",
+                calories: 180,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "西红柿", amount: "2 个" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "糖", amount: "1/2 茶匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "西红柿"],
+                steps: [
+                    "西红柿洗净切块，鸡蛋打入碗中，加少许盐搅散",
+                    "热锅凉油，倒入蛋液，用筷子快速划散，炒至凝固盛出",
+                    "锅中再加少许油，放入西红柿块，中火翻炒出汁",
+                    "加入炒好的鸡蛋，调入盐和糖，翻炒均匀",
+                    "撒上葱花，出锅装盘即可"
+                ],
+                tips: "西红柿要选熟透的，这样更容易炒出汁。喜欢甜口的可以多加一点糖。"
+            },
+            {
+                id: 2,
+                name: "青椒炒蛋",
+                emoji: "🫑",
+                category: "egg",
+                difficulty: "简单",
+                time: "8 分钟",
+                calories: 160,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "青椒", amount: "2 个" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "青椒"],
+                steps: [
+                    "青椒去籽切丝，鸡蛋打散加少许盐",
+                    "热锅倒油，倒入蛋液炒散盛出",
+                    "锅中留底油，放入青椒丝翻炒至断生",
+                    "倒入鸡蛋，加生抽和盐，快速翻炒均匀即可"
+                ],
+                tips: "青椒不要炒太久，保持脆嫩口感更好。"
+            },
+            {
+                id: 3,
+                name: "韭菜炒鸡蛋",
+                emoji: "🥬",
+                category: "egg",
+                difficulty: "简单",
+                time: "6 分钟",
+                calories: 150,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "韭菜", amount: "1 把" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "韭菜"],
+                steps: [
+                    "韭菜洗净切段，鸡蛋打散",
+                    "热锅倒油，倒入蛋液炒至半熟",
+                    "加入韭菜段，快速翻炒",
+                    "韭菜变软后加盐调味，立即出锅"
+                ],
+                tips: "韭菜很容易熟，不要炒太久，否则会变老。"
+            },
+            {
+                id: 4,
+                name: "虾仁滑蛋",
+                emoji: "🦐",
+                category: "egg",
+                difficulty: "中等",
+                time: "12 分钟",
+                calories: 200,
+                ingredients: [
+                    { name: "鸡蛋", amount: "4 个" },
+                    { name: "虾仁", amount: "150 克" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 茶匙" },
+                    { name: "食用油", amount: "3 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "虾仁"],
+                steps: [
+                    "虾仁洗净，用料酒、盐、淀粉腌制 10 分钟",
+                    "鸡蛋打散，加入少许盐和葱花",
+                    "热锅倒油，放入虾仁滑炒至变色盛出",
+                    "锅中再倒油，倒入蛋液，用筷子快速搅拌",
+                    "蛋液半凝固时加入虾仁，继续翻炒至熟",
+                    "出锅前再撒些葱花即可"
+                ],
+                tips: "蛋液要快速搅拌才能做出滑嫩的口感。"
+            },
+            {
+                id: 5,
+                name: "葱花炒蛋",
+                emoji: "🥚",
+                category: "egg",
+                difficulty: "简单",
+                time: "5 分钟",
+                calories: 140,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "葱花", amount: "3 根" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "葱"],
+                steps: [
+                    "葱切成葱花，鸡蛋打散加入葱花和盐",
+                    "热锅倒油，油热后倒入蛋液",
+                    "用铲子快速划散，炒至鸡蛋凝固",
+                    "翻炒几下即可出锅"
+                ],
+                tips: "最简单却最经典的家常菜，关键是火候要掌握好。"
+            },
+            {
+                id: 6,
+                name: "苦瓜炒蛋",
+                emoji: "🥒",
+                category: "egg",
+                difficulty: "简单",
+                time: "12 分钟",
+                calories: 130,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "苦瓜", amount: "1 根" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "苦瓜"],
+                steps: [
+                    "苦瓜对半切开，去瓤切片，用盐腌制 10 分钟后挤干水分",
+                    "鸡蛋打散备用",
+                    "热锅倒油，先炒苦瓜至断生",
+                    "倒入蛋液，快速翻炒至凝固",
+                    "加盐调味即可"
+                ],
+                tips: "苦瓜用盐腌制可以去除部分苦味，怕苦的可以多用盐腌一会儿。"
+            },
+            {
+                id: 7,
+                name: "洋葱炒蛋",
+                emoji: "🧅",
+                category: "egg",
+                difficulty: "简单",
+                time: "10 分钟",
+                calories: 170,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "洋葱", amount: "1 个" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "洋葱"],
+                steps: [
+                    "洋葱切丝，鸡蛋打散",
+                    "热锅倒油，炒散鸡蛋盛出",
+                    "锅中留底油，放入洋葱丝炒香",
+                    "洋葱变软后倒入鸡蛋",
+                    "加盐和生抽，翻炒均匀即可"
+                ],
+                tips: "洋葱炒到透明微黄时最甜最好吃。"
+            },
+            {
+                id: 8,
+                name: "香椿炒蛋",
+                emoji: "🌿",
+                category: "egg",
+                difficulty: "简单",
+                time: "8 分钟",
+                calories: 160,
+                ingredients: [
+                    { name: "鸡蛋", amount: "4 个" },
+                    { name: "香椿", amount: "100 克" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "食用油", amount: "3 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "香椿"],
+                steps: [
+                    "香椿洗净，用开水焯烫 30 秒后捞出切碎",
+                    "鸡蛋打散，加入香椿碎和盐搅匀",
+                    "热锅多倒些油，油热后倒入蛋液",
+                    "用铲子快速划散，炒至金黄即可"
+                ],
+                tips: "香椿一定要焯水，可以去除亚硝酸盐。春季时令菜。"
+            },
+            {
+                id: 9,
+                name: "黄瓜炒蛋",
+                emoji: "🥒",
+                category: "egg",
+                difficulty: "简单",
+                time: "8 分钟",
+                calories: 140,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "黄瓜", amount: "1 根" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "蒜末", amount: "适量" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "黄瓜"],
+                steps: [
+                    "黄瓜切片，鸡蛋打散",
+                    "热锅倒油，炒散鸡蛋盛出",
+                    "锅中留底油，爆香蒜末",
+                    "放入黄瓜片翻炒",
+                    "倒入鸡蛋，加盐调味即可"
+                ],
+                tips: "黄瓜不要炒太久，保持清脆口感。"
+            },
+            {
+                id: 10,
+                name: "菠菜炒蛋",
+                emoji: "🥬",
+                category: "egg",
+                difficulty: "简单",
+                time: "8 分钟",
+                calories: 135,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "菠菜", amount: "200 克" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "菠菜"],
+                steps: [
+                    "菠菜洗净切段，用开水焯烫 30 秒后捞出",
+                    "鸡蛋打散备用",
+                    "热锅倒油，先炒菠菜",
+                    "倒入蛋液，快速翻炒",
+                    "加盐调味即可出锅"
+                ],
+                tips: "菠菜焯水可以去除草酸，更健康。"
+            },
+            {
+                id: 11,
+                name: "蛋炒饭",
+                emoji: "🍚",
+                category: "staple",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "米饭", amount: "2 碗" },
+                    { name: "鸡蛋", amount: "2 个" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡蛋", "米饭"],
+                steps: [
+                    "鸡蛋打散，热锅倒油炒散盛出",
+                    "锅中再倒油，放入米饭炒散",
+                    "用铲子将米饭压散，炒至粒粒分明",
+                    "倒入鸡蛋，加盐和生抽",
+                    "撒上葱花，翻炒均匀即可"
+                ],
+                tips: "最好用隔夜饭，水分少更容易炒散。"
+            },
+            {
+                id: 12,
+                name: "番茄蛋花汤",
+                emoji: "🍲",
+                category: "soup",
+                difficulty: "简单",
+                time: "10 分钟",
+                calories: 100,
+                ingredients: [
+                    { name: "鸡蛋", amount: "2 个" },
+                    { name: "西红柿", amount: "2 个" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "香油", amount: "几滴" },
+                    { name: "水淀粉", amount: "适量" }
+                ],
+                mainIngredients: ["鸡蛋", "西红柿"],
+                steps: [
+                    "西红柿切块，鸡蛋打散",
+                    "锅中加水烧开，放入西红柿",
+                    "煮 3 分钟后淋入水淀粉勾芡",
+                    "缓慢倒入蛋液，形成蛋花",
+                    "加盐调味，撒葱花，滴香油即可"
+                ],
+                tips: "倒蛋液时要慢，用筷子轻轻搅拌形成漂亮的蛋花。"
+            },
+            {
+                id: 13,
+                name: "紫菜蛋花汤",
+                emoji: "🌊",
+                category: "soup",
+                difficulty: "简单",
+                time: "8 分钟",
+                calories: 90,
+                ingredients: [
+                    { name: "鸡蛋", amount: "2 个" },
+                    { name: "紫菜", amount: "1 张" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "香油", amount: "几滴" },
+                    { name: "虾皮", amount: "适量" }
+                ],
+                mainIngredients: ["鸡蛋", "紫菜"],
+                steps: [
+                    "紫菜撕小块，鸡蛋打散",
+                    "锅中加水烧开，放入紫菜和虾皮",
+                    "煮 1 分钟后淋入蛋液",
+                    "加盐调味，撒葱花",
+                    "滴几滴香油即可"
+                ],
+                tips: "紫菜不要煮太久，否则会失去鲜味。"
+            },
+            {
+                id: 14,
+                name: "蛤蜊蒸蛋",
+                emoji: "🥚",
+                category: "egg",
+                difficulty: "中等",
+                time: "20 分钟",
+                calories: 180,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "蛤蜊", amount: "200 克" },
+                    { name: "盐", amount: "1/2 茶匙" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "香油", amount: "几滴" },
+                    { name: "葱花", amount: "适量" }
+                ],
+                mainIngredients: ["鸡蛋", "蛤蜊"],
+                steps: [
+                    "蛤蜊吐沙洗净，放入开水中焯至开口",
+                    "鸡蛋打散，加入 1.5 倍温水，加盐搅匀",
+                    "蛋液过筛，放入蛤蜊",
+                    "盖上保鲜膜，水开后上锅蒸 10 分钟",
+                    "淋上生抽和香油，撒葱花即可"
+                ],
+                tips: "蛋液和水的比例是 1:1.5，这样蒸出来最嫩滑。"
+            },
+            {
+                id: 15,
+                name: "肉末蒸蛋",
+                emoji: "🥩",
+                category: "egg",
+                difficulty: "中等",
+                time: "20 分钟",
+                calories: 220,
+                ingredients: [
+                    { name: "鸡蛋", amount: "3 个" },
+                    { name: "猪肉末", amount: "100 克" },
+                    { name: "盐", amount: "1 茶匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "香油", amount: "几滴" }
+                ],
+                mainIngredients: ["鸡蛋", "猪肉"],
+                steps: [
+                    "鸡蛋打散，加入 1.5 倍温水，加少许盐搅匀过筛",
+                    "盖上保鲜膜，水开后蒸 8 分钟至凝固",
+                    "肉末加料酒、生抽腌制 5 分钟",
+                    "热锅倒油，炒散肉末至变色",
+                    "加生抽和少许水，煮至收汁",
+                    "将肉末浇在蒸蛋上，撒葱花，滴香油"
+                ],
+                tips: "蒸蛋时要用小火，时间不要过长。"
+            },
+
+            // 鸡肉类 (15 道)
+            {
+                id: 16,
+                name: "宫保鸡丁",
+                emoji: "🍗",
+                category: "chicken",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 320,
+                ingredients: [
+                    { name: "鸡胸肉", amount: "300 克" },
+                    { name: "花生米", amount: "80 克" },
+                    { name: "干辣椒", amount: "10 个" },
+                    { name: "花椒", amount: "1 茶匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "醋", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "花生"],
+                steps: [
+                    "鸡胸肉切丁，加生抽、料酒、淀粉腌制 15 分钟",
+                    "调宫保汁：生抽、醋、糖、淀粉、水混合",
+                    "花生米冷油下锅，小火炸至金黄捞出",
+                    "热锅倒油，放入鸡丁滑炒至变色盛出",
+                    "锅中留底油，放入干辣椒、花椒炒香",
+                    "加入葱姜蒜爆香，倒入鸡丁翻炒",
+                    "倒入宫保汁，快速翻炒均匀",
+                    "最后加入花生米，翻炒几下即可"
+                ],
+                tips: "宫保汁的比例很重要，酸甜微辣是特色。花生米最后放保持酥脆。"
+            },
+            {
+                id: 17,
+                name: "可乐鸡翅",
+                emoji: "🥤",
+                category: "chicken",
+                difficulty: "简单",
+                time: "30 分钟",
+                calories: 380,
+                ingredients: [
+                    { name: "鸡翅中", amount: "500 克" },
+                    { name: "可乐", amount: "1 罐" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "料酒", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉"],
+                steps: [
+                    "鸡翅洗净，两面划几刀，冷水下锅焯水",
+                    "捞出鸡翅，用温水冲洗干净",
+                    "热锅倒少许油，放入鸡翅煎至两面金黄",
+                    "加入姜片炒香，倒入可乐没过鸡翅",
+                    "加生抽、老抽、料酒，大火烧开",
+                    "转小火焖煮 20 分钟",
+                    "大火收汁至浓稠即可"
+                ],
+                tips: "可乐本身有糖分，不需要额外加糖。收汁时要不停翻动防止粘锅。"
+            },
+            {
+                id: 18,
+                name: "黄焖鸡",
+                emoji: "🍲",
+                category: "chicken",
+                difficulty: "中等",
+                time: "40 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "鸡腿", amount: "500 克" },
+                    { name: "香菇", amount: "8 朵" },
+                    { name: "青椒", amount: "1 个" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "蒜", amount: "4 瓣" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "冰糖", amount: "10 克" }
+                ],
+                mainIngredients: ["鸡肉", "香菇"],
+                steps: [
+                    "鸡腿切块，冷水下锅焯水后捞出",
+                    "香菇泡发，青椒切块",
+                    "热锅倒油，放入冰糖炒出糖色",
+                    "倒入鸡块翻炒上色",
+                    "加入姜片、蒜、生抽、老抽、料酒翻炒",
+                    "加入香菇，倒入开水没过食材",
+                    "大火烧开转小火焖煮 25 分钟",
+                    "加入青椒块，大火收汁即可"
+                ],
+                tips: "炒糖色时要用小火，不要炒糊。汤汁不要收太干，拌饭很好吃。"
+            },
+            {
+                id: 19,
+                name: "白切鸡",
+                emoji: "🍗",
+                category: "chicken",
+                difficulty: "中等",
+                time: "50 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "三黄鸡", amount: "1 只" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "葱段", amount: "2 根" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "盐", amount: "适量" },
+                    { name: "香油", amount: "适量" }
+                ],
+                mainIngredients: ["鸡肉"],
+                steps: [
+                    "鸡处理干净，用盐抹遍全身，腌制 30 分钟",
+                    "大锅加水，放入姜片、葱段、料酒烧开",
+                    "手提鸡头，将鸡身浸入热水中 10 秒后提起，重复 3 次",
+                    "将整只鸡放入水中，小火浸煮 25 分钟",
+                    "关火焖 10 分钟，捞出放入冰水中",
+                    "冷却后斩块，淋上香油即可"
+                ],
+                tips: "煮鸡时水不要沸腾太大，小火浸煮才能保持肉质嫩滑。冰水浸泡使皮更脆。"
+            },
+            {
+                id: 20,
+                name: "辣子鸡",
+                emoji: "🌶️",
+                category: "chicken",
+                difficulty: "中等",
+                time: "35 分钟",
+                calories: 340,
+                ingredients: [
+                    { name: "鸡腿肉", amount: "400 克" },
+                    { name: "干辣椒", amount: "50 克" },
+                    { name: "花椒", amount: "2 汤匙" },
+                    { name: "姜蒜", amount: "适量" },
+                    { name: "白芝麻", amount: "1 汤匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "辣椒"],
+                steps: [
+                    "鸡腿肉切小块，加生抽、料酒、淀粉腌制 20 分钟",
+                    "干辣椒剪成段，去掉部分辣椒籽",
+                    "热锅多倒油，烧至六成热",
+                    "放入鸡块，中火炸至金黄捞出",
+                    "待油温升高后，复炸 30 秒",
+                    "锅中留底油，放入干辣椒、花椒炒香",
+                    "加入姜蒜末，倒入鸡块翻炒",
+                    "撒上白芝麻，翻炒均匀即可"
+                ],
+                tips: "鸡块复炸一次更酥脆。辣椒和花椒的用量可根据口味调整。"
+            },
+            {
+                id: 21,
+                name: "口水鸡",
+                emoji: "🍗",
+                category: "chicken",
+                difficulty: "中等",
+                time: "40 分钟",
+                calories: 300,
+                ingredients: [
+                    { name: "鸡腿", amount: "4 个" },
+                    { name: "花生碎", amount: "30 克" },
+                    { name: "白芝麻", amount: "1 汤匙" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "蒜末", amount: "适量" },
+                    { name: "辣椒油", amount: "3 汤匙" },
+                    { name: "花椒油", amount: "1 汤匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "醋", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 茶匙" }
+                ],
+                mainIngredients: ["鸡肉"],
+                steps: [
+                    "鸡腿冷水下锅，加姜片、料酒煮熟",
+                    "捞出放入冰水中冷却",
+                    "调制酱汁：辣椒油、花椒油、生抽、醋、糖、蒜末混合",
+                    "鸡腿斩块，摆入盘中",
+                    "淋上酱汁",
+                    "撒上花生碎、白芝麻、葱花即可"
+                ],
+                tips: "冰水浸泡让鸡皮更脆。酱汁可以根据口味调整。"
+            },
+            {
+                id: 22,
+                name: "咖喱鸡",
+                emoji: "🍛",
+                category: "chicken",
+                difficulty: "简单",
+                time: "35 分钟",
+                calories: 380,
+                ingredients: [
+                    { name: "鸡腿", amount: "400 克" },
+                    { name: "土豆", amount: "2 个" },
+                    { name: "胡萝卜", amount: "1 根" },
+                    { name: "洋葱", amount: "1 个" },
+                    { name: "咖喱块", amount: "100 克" },
+                    { name: "椰浆", amount: "100 毫升" }
+                ],
+                mainIngredients: ["鸡肉", "土豆", "胡萝卜"],
+                steps: [
+                    "鸡腿切块，土豆、胡萝卜切滚刀块，洋葱切块",
+                    "热锅倒油，放入鸡块煎至表面金黄",
+                    "加入洋葱炒香",
+                    "加入土豆、胡萝卜翻炒",
+                    "倒入开水没过食材，大火烧开",
+                    "转小火煮 15 分钟至食材熟软",
+                    "放入咖喱块，搅拌至融化",
+                    "倒入椰浆，再煮 2 分钟即可"
+                ],
+                tips: "咖喱块本身有咸味，一般不需要额外加盐。椰浆让咖喱更香浓。"
+            },
+            {
+                id: 23,
+                name: "香菇滑鸡",
+                emoji: "🍄",
+                category: "chicken",
+                difficulty: "简单",
+                time: "30 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "鸡腿", amount: "400 克" },
+                    { name: "干香菇", amount: "10 朵" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "香菇"],
+                steps: [
+                    "香菇提前泡发，鸡腿切块",
+                    "鸡块加生抽、蚝油、料酒、淀粉腌制 20 分钟",
+                    "热锅倒油，放入姜片爆香",
+                    "倒入鸡块翻炒至变色",
+                    "加入香菇，倒入泡香菇的水",
+                    "大火烧开转小火焖煮 15 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "泡香菇的水不要倒掉，用来炖鸡更香。"
+            },
+            {
+                id: 24,
+                name: "葱油鸡",
+                emoji: "🧅",
+                category: "chicken",
+                difficulty: "简单",
+                time: "35 分钟",
+                calories: 290,
+                ingredients: [
+                    { name: "鸡腿", amount: "4 个" },
+                    { name: "葱", amount: "1 把" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "食用油", amount: "3 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "葱"],
+                steps: [
+                    "鸡腿用盐和料酒抹匀，腌制 10 分钟",
+                    "冷水上锅，放入鸡腿和姜片",
+                    "大火烧开后转小火蒸 20 分钟",
+                    "取出鸡腿，斩块装盘",
+                    "葱切成葱花，放在鸡块上",
+                    "淋上生抽",
+                    "烧热油，淋在葱花上即可"
+                ],
+                tips: "热油淋葱花是这道菜的灵魂，一定要把葱香味激发出来。"
+            },
+            {
+                id: 25,
+                name: "三杯鸡",
+                emoji: "🍗",
+                category: "chicken",
+                difficulty: "中等",
+                time: "35 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "鸡腿", amount: "500 克" },
+                    { name: "九层塔", amount: "1 把" },
+                    { name: "姜", amount: "1 块" },
+                    { name: "蒜", amount: "1 头" },
+                    { name: "米酒", amount: "100 毫升" },
+                    { name: "生抽", amount: "50 毫升" },
+                    { name: "香油", amount: "50 毫升" },
+                    { name: "冰糖", amount: "15 克" }
+                ],
+                mainIngredients: ["鸡肉"],
+                steps: [
+                    "鸡腿切块，姜切片，蒜拍扁",
+                    "热锅倒入香油，放入姜片小火煸炒至卷边",
+                    "加入蒜瓣炒香",
+                    "倒入鸡块，翻炒至表面微黄",
+                    "加入米酒、生抽、冰糖",
+                    "大火烧开转小火焖煮 20 分钟",
+                    "大火收汁，加入九层塔快速翻炒",
+                    "九层塔变软即可出锅"
+                ],
+                tips: "三杯指一杯米酒、一杯酱油、一杯香油。九层塔是这道菜的灵魂。"
+            },
+            {
+                id: 26,
+                name: "小鸡炖蘑菇",
+                emoji: "🍲",
+                category: "chicken",
+                difficulty: "简单",
+                time: "50 分钟",
+                calories: 320,
+                ingredients: [
+                    { name: "土鸡", amount: "500 克" },
+                    { name: "干榛蘑", amount: "50 克" },
+                    { name: "粉条", amount: "100 克" },
+                    { name: "姜片", amount: "4 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "蘑菇"],
+                steps: [
+                    "榛蘑泡发，粉条泡软，鸡斩块焯水",
+                    "热锅倒油，放入鸡块煸炒至出油",
+                    "加入姜片、八角炒香",
+                    "倒入生抽、老抽、料酒翻炒上色",
+                    "加入榛蘑，倒入开水没过食材",
+                    "大火烧开转小火炖 30 分钟",
+                    "加入粉条，再炖 10 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "东北经典菜，榛蘑的香味独特，粉条吸收了汤汁特别好吃。"
+            },
+            {
+                id: 27,
+                name: "孜然鸡丁",
+                emoji: "🌶️",
+                category: "chicken",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "鸡胸肉", amount: "300 克" },
+                    { name: "孜然粒", amount: "2 汤匙" },
+                    { name: "辣椒粉", amount: "1 汤匙" },
+                    { name: "白芝麻", amount: "1 汤匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "孜然"],
+                steps: [
+                    "鸡胸肉切丁，加生抽、料酒、淀粉腌制 15 分钟",
+                    "热锅倒油，放入鸡丁滑炒至变色",
+                    "加入葱姜蒜炒香",
+                    "撒入孜然粒、辣椒粉，快速翻炒",
+                    "加入白芝麻，翻炒均匀即可"
+                ],
+                tips: "孜然粒比孜然粉更香，火候要大才能炒出香味。"
+            },
+            {
+                id: 28,
+                name: "板栗烧鸡",
+                emoji: "🌰",
+                category: "chicken",
+                difficulty: "中等",
+                time: "45 分钟",
+                calories: 360,
+                ingredients: [
+                    { name: "鸡腿", amount: "500 克" },
+                    { name: "板栗", amount: "200 克" },
+                    { name: "姜片", amount: "4 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "冰糖", amount: "10 克" }
+                ],
+                mainIngredients: ["鸡肉", "板栗"],
+                steps: [
+                    "鸡腿切块焯水，板栗去皮",
+                    "热锅倒油，放入冰糖炒糖色",
+                    "倒入鸡块翻炒上色",
+                    "加入姜片、八角、生抽、老抽、料酒翻炒",
+                    "倒入开水没过食材，大火烧开",
+                    "转小火炖 20 分钟",
+                    "加入板栗，再炖 15 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "板栗可以去市场买现成去皮的。炖煮时间根据板栗大小调整。"
+            },
+            {
+                id: 29,
+                name: "鱼香鸡丝",
+                emoji: "🍗",
+                category: "chicken",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 290,
+                ingredients: [
+                    { name: "鸡胸肉", amount: "300 克" },
+                    { name: "木耳", amount: "50 克" },
+                    { name: "胡萝卜", amount: "半根" },
+                    { name: "青椒", amount: "1 个" },
+                    { name: "泡椒", amount: "2 汤匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "醋", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "木耳", "胡萝卜"],
+                steps: [
+                    "鸡胸肉切丝，加料酒、淀粉腌制",
+                    "木耳泡发切丝，胡萝卜、青椒切丝",
+                    "调鱼香汁：生抽、醋、糖、淀粉、水混合",
+                    "热锅倒油，滑炒鸡丝至变色盛出",
+                    "锅中留底油，放入泡椒、葱姜蒜炒香",
+                    "加入胡萝卜、木耳、青椒翻炒",
+                    "倒入鸡丝，加入鱼香汁快速翻炒",
+                    "汤汁浓稠即可出锅"
+                ],
+                tips: "鱼香汁的比例是关键，酸甜微辣。没有泡椒可以用豆瓣酱代替。"
+            },
+            {
+                id: 30,
+                name: "豉椒鸡块",
+                emoji: "🌶️",
+                category: "chicken",
+                difficulty: "简单",
+                time: "30 分钟",
+                calories: 310,
+                ingredients: [
+                    { name: "鸡腿", amount: "400 克" },
+                    { name: "豆豉", amount: "2 汤匙" },
+                    { name: "青椒", amount: "2 个" },
+                    { name: "姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鸡肉", "青椒"],
+                steps: [
+                    "鸡腿切块，加生抽、料酒、淀粉腌制",
+                    "青椒切块，豆豉剁碎",
+                    "热锅倒油，放入鸡块煎至金黄",
+                    "加入豆豉、姜蒜炒香",
+                    "倒入青椒块翻炒",
+                    "加少许水，焖煮 2 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "豆豉本身有咸味，注意控制盐的用量。"
+            },
+
+            // 牛肉类 (12 道)
+            {
+                id: 31,
+                name: "红烧牛肉",
+                emoji: "🥩",
+                category: "beef",
+                difficulty: "中等",
+                time: "90 分钟",
+                calories: 420,
+                ingredients: [
+                    { name: "牛腩", amount: "500 克" },
+                    { name: "土豆", amount: "2 个" },
+                    { name: "胡萝卜", amount: "1 根" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "桂皮", amount: "1 块" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "3 汤匙" },
+                    { name: "冰糖", amount: "15 克" }
+                ],
+                mainIngredients: ["牛肉", "土豆", "胡萝卜"],
+                steps: [
+                    "牛腩切块，冷水下锅焯水后捞出",
+                    "土豆、胡萝卜切滚刀块",
+                    "热锅倒油，放入冰糖炒糖色",
+                    "倒入牛肉块翻炒上色",
+                    "加入姜片、八角、桂皮炒香",
+                    "倒入生抽、老抽、料酒翻炒",
+                    "加入开水没过牛肉，大火烧开",
+                    "转小火炖 60 分钟",
+                    "加入土豆、胡萝卜，再炖 20 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "牛肉要选牛腩部位，肥瘦相间炖出来更好吃。炖牛肉要用热水。"
+            },
+            {
+                id: 32,
+                name: "青椒牛肉丝",
+                emoji: "🫑",
+                category: "beef",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "牛肉", amount: "300 克" },
+                    { name: "青椒", amount: "3 个" },
+                    { name: "姜丝", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "青椒"],
+                steps: [
+                    "牛肉切丝，加生抽、料酒、淀粉、油腌制 15 分钟",
+                    "青椒切丝",
+                    "热锅倒油，放入牛肉丝快速滑炒至变色盛出",
+                    "锅中留底油，放入青椒丝翻炒",
+                    "青椒断生后倒入牛肉丝",
+                    "快速翻炒均匀即可出锅"
+                ],
+                tips: "牛肉逆纹切更嫩。炒牛肉要大火快炒，保持嫩滑。"
+            },
+            {
+                id: 33,
+                name: "黑椒牛柳",
+                emoji: "🥩",
+                category: "beef",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 300,
+                ingredients: [
+                    { name: "牛里脊", amount: "300 克" },
+                    { name: "洋葱", amount: "1 个" },
+                    { name: "青椒", amount: "1 个" },
+                    { name: "黑胡椒", amount: "2 茶匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "洋葱"],
+                steps: [
+                    "牛肉切条，加生抽、蚝油、料酒、淀粉、黑胡椒腌制 20 分钟",
+                    "洋葱切丝，青椒切丝",
+                    "热锅倒油，放入牛柳快速滑炒至变色盛出",
+                    "锅中留底油，放入洋葱、青椒炒香",
+                    "倒入牛柳，再加些黑胡椒",
+                    "快速翻炒均匀即可"
+                ],
+                tips: "牛柳要逆纹切，腌制时加淀粉和油锁住水分。"
+            },
+            {
+                id: 34,
+                name: "土豆烧牛肉",
+                emoji: "🥔",
+                category: "beef",
+                difficulty: "简单",
+                time: "80 分钟",
+                calories: 380,
+                ingredients: [
+                    { name: "牛腩", amount: "400 克" },
+                    { name: "土豆", amount: "3 个" },
+                    { name: "姜片", amount: "4 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "土豆"],
+                steps: [
+                    "牛腩切块焯水，土豆切块",
+                    "热锅倒油，放入牛肉翻炒",
+                    "加入姜片、八角、生抽、老抽、料酒",
+                    "倒入开水没过食材，大火烧开",
+                    "转小火炖 50 分钟",
+                    "加入土豆块，再炖 20 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "简单家常的做法，土豆吸收了牛肉的汤汁特别好吃。"
+            },
+            {
+                id: 35,
+                name: "葱爆牛肉",
+                emoji: "🧅",
+                category: "beef",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 290,
+                ingredients: [
+                    { name: "牛肉", amount: "300 克" },
+                    { name: "大葱", amount: "3 根" },
+                    { name: "姜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "老抽", amount: "1 茶匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" },
+                    { name: "醋", amount: "1 茶匙" }
+                ],
+                mainIngredients: ["牛肉", "葱"],
+                steps: [
+                    "牛肉切片，加生抽、老抽、料酒、淀粉、油腌制 15 分钟",
+                    "大葱斜切成段",
+                    "热锅倒油，放入牛肉快速滑炒至变色盛出",
+                    "锅中留底油，放入葱段炒香",
+                    "倒入牛肉，加少许醋",
+                    "大火快速翻炒均匀即可"
+                ],
+                tips: "这道菜要大火快炒，葱香才能出来。最后淋少许醋提味。"
+            },
+            {
+                id: 36,
+                name: "水煮牛肉",
+                emoji: "🌶️",
+                category: "beef",
+                difficulty: "中等",
+                time: "30 分钟",
+                calories: 380,
+                ingredients: [
+                    { name: "牛里脊", amount: "400 克" },
+                    { name: "豆芽", amount: "200 克" },
+                    { name: "生菜", amount: "1 棵" },
+                    { name: "干辣椒", amount: "20 个" },
+                    { name: "花椒", amount: "2 汤匙" },
+                    { name: "豆瓣酱", amount: "3 汤匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "豆芽"],
+                steps: [
+                    "牛肉切片，加生抽、料酒、淀粉、油腌制 20 分钟",
+                    "豆芽、生菜洗净备用",
+                    "热锅倒油，放入豆瓣酱炒出红油",
+                    "加入葱姜蒜炒香，倒入开水烧开",
+                    "放入豆芽、生菜烫熟，捞出垫在碗底",
+                    "转小火，放入牛肉片烫熟",
+                    "连汤倒入碗中",
+                    "撒上蒜末、干辣椒、花椒",
+                    "烧热油淋在上面即可"
+                ],
+                tips: "最后淋热油是关键，能激发出辣椒和花椒的香味。"
+            },
+            {
+                id: 37,
+                name: "番茄牛肉汤",
+                emoji: "🍅",
+                category: "soup",
+                difficulty: "简单",
+                time: "60 分钟",
+                calories: 220,
+                ingredients: [
+                    { name: "牛腩", amount: "300 克" },
+                    { name: "西红柿", amount: "3 个" },
+                    { name: "土豆", amount: "1 个" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "盐", amount: "适量" },
+                    { name: "番茄酱", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "西红柿", "土豆"],
+                steps: [
+                    "牛腩切块焯水，西红柿切块，土豆切块",
+                    "热锅倒少许油，放入西红柿炒出汁",
+                    "加入番茄酱继续翻炒",
+                    "倒入牛肉块，加入姜片",
+                    "倒入开水，大火烧开转小火炖 40 分钟",
+                    "加入土豆块，再炖 15 分钟",
+                    "加盐调味即可"
+                ],
+                tips: "西红柿先炒一下再加水，汤会更浓郁。"
+            },
+            {
+                id: 38,
+                name: "杭椒牛柳",
+                emoji: "🌶️",
+                category: "beef",
+                difficulty: "简单",
+                time: "18 分钟",
+                calories: 270,
+                ingredients: [
+                    { name: "牛里脊", amount: "300 克" },
+                    { name: "杭椒", amount: "10 个" },
+                    { name: "蒜", amount: "3 瓣" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" },
+                    { name: "黑胡椒", amount: "1/2 茶匙" }
+                ],
+                mainIngredients: ["牛肉", "辣椒"],
+                steps: [
+                    "牛肉切条，加生抽、蚝油、料酒、淀粉、黑胡椒腌制",
+                    "杭椒切段，蒜切片",
+                    "热锅倒油，放入牛柳滑炒至变色盛出",
+                    "锅中留底油，放入杭椒、蒜片炒香",
+                    "倒入牛柳，快速翻炒",
+                    "加少许盐调味即可"
+                ],
+                tips: "杭椒比较辣，不能吃辣的可以少放一些。"
+            },
+            {
+                id: 39,
+                name: "牛肉炖萝卜",
+                emoji: "🥕",
+                category: "beef",
+                difficulty: "简单",
+                time: "70 分钟",
+                calories: 250,
+                ingredients: [
+                    { name: "牛腩", amount: "400 克" },
+                    { name: "白萝卜", amount: "1 根" },
+                    { name: "姜片", amount: "4 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "盐", amount: "适量" },
+                    { name: "白胡椒", amount: "1/2 茶匙" }
+                ],
+                mainIngredients: ["牛肉", "萝卜"],
+                steps: [
+                    "牛腩切块焯水，白萝卜切块",
+                    "牛肉放入砂锅，加入姜片、八角",
+                    "倒入开水，大火烧开转小火炖 50 分钟",
+                    "加入萝卜块，再炖 15 分钟",
+                    "加盐和白胡椒调味即可"
+                ],
+                tips: "冬吃萝卜夏吃姜，这道菜特别适合冬天食用，暖身又营养。"
+            },
+            {
+                id: 40,
+                name: "小炒黄牛肉",
+                emoji: "🌶️",
+                category: "beef",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 290,
+                ingredients: [
+                    { name: "黄牛肉", amount: "300 克" },
+                    { name: "小米椒", amount: "10 个" },
+                    { name: "香菜", amount: "1 把" },
+                    { name: "姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "老抽", amount: "1 茶匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["牛肉", "辣椒", "香菜"],
+                steps: [
+                    "牛肉切片，加生抽、老抽、料酒、淀粉、油腌制",
+                    "小米椒切圈，香菜切段，姜蒜切末",
+                    "热锅倒油，放入牛肉快速滑炒至变色盛出",
+                    "锅中留底油，放入小米椒、姜蒜炒香",
+                    "倒入牛肉，快速翻炒",
+                    "加入香菜，翻炒几下即可"
+                ],
+                tips: "这道菜要大火快炒，保持牛肉嫩滑和香菜的清香。"
+            },
+            {
+                id: 41,
+                name: "干煸牛肉丝",
+                emoji: "🥩",
+                category: "beef",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 310,
+                ingredients: [
+                    { name: "牛肉", amount: "300 克" },
+                    { name: "芹菜", amount: "2 根" },
+                    { name: "干辣椒", amount: "10 个" },
+                    { name: "花椒", amount: "1 茶匙" },
+                    { name: "姜丝", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 茶匙" }
+                ],
+                mainIngredients: ["牛肉", "芹菜"],
+                steps: [
+                    "牛肉切丝，加生抽、料酒、淀粉腌制",
+                    "芹菜切段，干辣椒剪段",
+                    "热锅倒油，放入牛肉丝煸炒至干香",
+                    "加入干辣椒、花椒、姜丝炒香",
+                    "倒入芹菜翻炒",
+                    "加糖调味，翻炒均匀即可"
+                ],
+                tips: "干煸要把牛肉的水分炒干，这样才香。"
+            },
+            {
+                id: 42,
+                name: "咖喱牛肉",
+                emoji: "🍛",
+                category: "beef",
+                difficulty: "简单",
+                time: "50 分钟",
+                calories: 360,
+                ingredients: [
+                    { name: "牛腩", amount: "400 克" },
+                    { name: "土豆", amount: "2 个" },
+                    { name: "胡萝卜", amount: "1 根" },
+                    { name: "洋葱", amount: "1 个" },
+                    { name: "咖喱块", amount: "100 克" }
+                ],
+                mainIngredients: ["牛肉", "土豆", "胡萝卜"],
+                steps: [
+                    "牛腩切块焯水，蔬菜切块",
+                    "热锅倒油，放入牛肉翻炒",
+                    "加入洋葱炒香",
+                    "倒入开水没过食材，炖 30 分钟",
+                    "加入土豆、胡萝卜，再炖 15 分钟",
+                    "放入咖喱块，搅拌至融化",
+                    "煮至汤汁浓稠即可"
+                ],
+                tips: "咖喱牛肉比咖喱鸡更香浓，适合配米饭或面包。"
+            },
+
+            // 猪肉类 (15 道)
+            {
+                id: 43,
+                name: "红烧肉",
+                emoji: "🥩",
+                category: "pork",
+                difficulty: "中等",
+                time: "60 分钟",
+                calories: 450,
+                ingredients: [
+                    { name: "五花肉", amount: "500 克" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "桂皮", amount: "1 块" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "3 汤匙" },
+                    { name: "冰糖", amount: "30 克" }
+                ],
+                mainIngredients: ["猪肉"],
+                steps: [
+                    "五花肉切块，冷水下锅焯水后捞出",
+                    "热锅不放油，放入五花肉块煸炒出油",
+                    "加入冰糖，小火炒至融化上色",
+                    "加入姜片、八角、桂皮炒香",
+                    "倒入生抽、老抽、料酒翻炒",
+                    "加入开水没过肉块，大火烧开",
+                    "转小火炖 45 分钟",
+                    "大火收汁至浓稠即可"
+                ],
+                tips: "炒糖色要用小火，不要炒糊。炖肉一定要用开水，否则肉会柴。"
+            },
+            {
+                id: 44,
+                name: "鱼香肉丝",
+                emoji: "🍖",
+                category: "pork",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "猪里脊", amount: "300 克" },
+                    { name: "木耳", amount: "50 克" },
+                    { name: "胡萝卜", amount: "半根" },
+                    { name: "青椒", amount: "1 个" },
+                    { name: "泡椒", amount: "2 汤匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "醋", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "木耳", "胡萝卜"],
+                steps: [
+                    "猪肉切丝，加料酒、淀粉腌制",
+                    "木耳泡发切丝，蔬菜切丝",
+                    "调鱼香汁：生抽、醋、糖、淀粉、水混合",
+                    "热锅倒油，滑炒肉丝至变色盛出",
+                    "锅中留底油，放入泡椒、葱姜蒜炒香",
+                    "加入蔬菜丝翻炒",
+                    "倒入肉丝和鱼香汁",
+                    "快速翻炒均匀即可"
+                ],
+                tips: "鱼香汁比例：生抽 2、醋 1、糖 1。鱼香肉丝没有鱼，是川菜经典味型。"
+            },
+            {
+                id: 45,
+                name: "回锅肉",
+                emoji: "🥓",
+                category: "pork",
+                difficulty: "中等",
+                time: "30 分钟",
+                calories: 380,
+                ingredients: [
+                    { name: "五花肉", amount: "400 克" },
+                    { name: "蒜苗", amount: "200 克" },
+                    { name: "豆瓣酱", amount: "2 汤匙" },
+                    { name: "豆豉", amount: "1 汤匙" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "料酒", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "蒜苗"],
+                steps: [
+                    "五花肉整块冷水下锅，加姜片、料酒煮至八成熟",
+                    "捞出冷却后切成薄片",
+                    "蒜苗切段，豆瓣酱和豆豉剁碎",
+                    "热锅不放油，放入肉片煸炒出油",
+                    "加入豆瓣酱、豆豉炒出红油",
+                    "倒入蒜苗段，快速翻炒",
+                    "蒜苗断生即可出锅"
+                ],
+                tips: "回锅肉要先煮后炒，所以叫'回锅'。肉片要切薄一些。"
+            },
+            {
+                id: 46,
+                name: "糖醋排骨",
+                emoji: "🍖",
+                category: "pork",
+                difficulty: "中等",
+                time: "40 分钟",
+                calories: 400,
+                ingredients: [
+                    { name: "排骨", amount: "500 克" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "白芝麻", amount: "1 汤匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "醋", amount: "4 汤匙" },
+                    { name: "糖", amount: "3 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉"],
+                steps: [
+                    "排骨冷水下锅焯水后捞出",
+                    "调糖醋汁：生抽、醋、糖、料酒混合",
+                    "热锅倒油，放入排骨煎至两面金黄",
+                    "倒入糖醋汁，翻炒均匀",
+                    "加入开水没过排骨，大火烧开",
+                    "转小火焖煮 25 分钟",
+                    "大火收汁至浓稠",
+                    "撒上白芝麻即可"
+                ],
+                tips: "糖醋比例可以根据口味调整，经典比例是 1:2:3（酒：醋：糖）。"
+            },
+            {
+                id: 47,
+                name: "梅菜扣肉",
+                emoji: "🥩",
+                category: "pork",
+                difficulty: "困难",
+                time: "120 分钟",
+                calories: 480,
+                ingredients: [
+                    { name: "五花肉", amount: "500 克" },
+                    { name: "梅干菜", amount: "100 克" },
+                    { name: "姜片", amount: "5 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "冰糖", amount: "15 克" }
+                ],
+                mainIngredients: ["猪肉", "梅菜"],
+                steps: [
+                    "梅干菜泡发洗净，五花肉整块焯水",
+                    "五花肉加入生抽、老抽、料酒腌制 30 分钟",
+                    "锅中倒油，将肉块皮朝下煎至起泡",
+                    "肉块切片，皮朝下摆入碗中",
+                    "梅干菜炒香，铺在肉片上",
+                    "加入调料和适量水",
+                    "上锅蒸 60 分钟",
+                    "倒扣在盘中即可"
+                ],
+                tips: "这道菜工序复杂，但味道绝对值得。蒸的时间越长越入味。"
+            },
+            {
+                id: 48,
+                name: "木须肉",
+                emoji: "🍖",
+                category: "pork",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 260,
+                ingredients: [
+                    { name: "猪里脊", amount: "200 克" },
+                    { name: "鸡蛋", amount: "2 个" },
+                    { name: "木耳", amount: "30 克" },
+                    { name: "黄瓜", amount: "1 根" },
+                    { name: "葱姜", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "鸡蛋", "木耳", "黄瓜"],
+                steps: [
+                    "猪肉切片，加生抽、料酒、淀粉腌制",
+                    "木耳泡发，黄瓜切片，鸡蛋炒散备用",
+                    "热锅倒油，滑炒肉片至变色",
+                    "加入木耳、黄瓜翻炒",
+                    "倒入鸡蛋，加生抽调味",
+                    "撒上葱姜，翻炒均匀即可"
+                ],
+                tips: "木须肉是鲁菜经典，营养均衡，色彩丰富。"
+            },
+            {
+                id: 49,
+                name: "蒜苔炒肉",
+                emoji: "🥬",
+                category: "pork",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 240,
+                ingredients: [
+                    { name: "猪肉", amount: "200 克" },
+                    { name: "蒜苔", amount: "300 克" },
+                    { name: "姜丝", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "蒜苔"],
+                steps: [
+                    "猪肉切丝，加生抽、料酒、淀粉腌制",
+                    "蒜苔切段",
+                    "热锅倒油，滑炒肉丝至变色盛出",
+                    "锅中留底油，放入蒜苔翻炒",
+                    "蒜苔断生后倒入肉丝",
+                    "快速翻炒均匀即可"
+                ],
+                tips: "蒜苔不要炒太久，保持脆嫩口感。"
+            },
+            {
+                id: 50,
+                name: "猪肉炖粉条",
+                emoji: "🍲",
+                category: "pork",
+                difficulty: "简单",
+                time: "40 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "五花肉", amount: "300 克" },
+                    { name: "粉条", amount: "150 克" },
+                    { name: "白菜", amount: "200 克" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "八角", amount: "1 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "粉条"],
+                steps: [
+                    "五花肉切片，粉条泡软，白菜切块",
+                    "热锅不放油，放入五花肉煸炒出油",
+                    "加入姜片、八角炒香",
+                    "倒入生抽、老抽翻炒",
+                    "加入白菜翻炒",
+                    "倒入开水，放入粉条",
+                    "大火烧开转小火炖 20 分钟",
+                    "汤汁收浓即可"
+                ],
+                tips: "东北家常菜，粉条吸收了肉汤特别好吃。"
+            },
+            {
+                id: 51,
+                name: "青椒肉丝",
+                emoji: "🫑",
+                category: "pork",
+                difficulty: "简单",
+                time: "12 分钟",
+                calories: 220,
+                ingredients: [
+                    { name: "猪肉", amount: "200 克" },
+                    { name: "青椒", amount: "3 个" },
+                    { name: "姜丝", amount: "适量" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "青椒"],
+                steps: [
+                    "猪肉切丝，加生抽、料酒、淀粉腌制",
+                    "青椒切丝",
+                    "热锅倒油，滑炒肉丝至变色盛出",
+                    "锅中留底油，放入青椒翻炒",
+                    "青椒断生后倒入肉丝",
+                    "快速翻炒均匀即可"
+                ],
+                tips: "最经典的家常菜之一，简单却美味。"
+            },
+            {
+                id: 52,
+                name: "东坡肉",
+                emoji: "🥩",
+                category: "pork",
+                difficulty: "困难",
+                time: "150 分钟",
+                calories: 500,
+                ingredients: [
+                    { name: "五花肉", amount: "600 克" },
+                    { name: "葱", amount: "1 把" },
+                    { name: "姜", amount: "1 块" },
+                    { name: "生抽", amount: "5 汤匙" },
+                    { name: "老抽", amount: "2 汤匙" },
+                    { name: "料酒", amount: "200 毫升" },
+                    { name: "冰糖", amount: "40 克" }
+                ],
+                mainIngredients: ["猪肉"],
+                steps: [
+                    "五花肉整块焯水，切成 4 厘米见方的块",
+                    "用棉线将肉块绑成方形",
+                    "砂锅底部铺上葱段、姜片",
+                    "肉块皮朝下放入锅中",
+                    "加入生抽、老抽、料酒、冰糖",
+                    "加入开水没过肉块",
+                    "大火烧开转小火炖 90 分钟",
+                    "将肉块翻面，再炖 30 分钟",
+                    "大火收汁至浓稠"
+                ],
+                tips: "东坡肉是杭州名菜，肥而不腻，入口即化。需要耐心慢炖。"
+            },
+            {
+                id: 53,
+                name: "蚂蚁上树",
+                emoji: "🍜",
+                category: "pork",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 320,
+                ingredients: [
+                    { name: "猪肉末", amount: "150 克" },
+                    { name: "粉丝", amount: "100 克" },
+                    { name: "豆瓣酱", amount: "2 汤匙" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "粉丝"],
+                steps: [
+                    "粉丝用温水泡软",
+                    "热锅倒油，放入肉末煸炒至变色",
+                    "加入豆瓣酱炒出红油",
+                    "加入葱姜蒜炒香",
+                    "倒入生抽、料酒和适量水",
+                    "放入粉丝，翻炒均匀",
+                    "煮至汤汁收干即可"
+                ],
+                tips: "粉丝不要泡太软，否则容易烂。肉末要炒散。"
+            },
+            {
+                id: 54,
+                name: "盐煎肉",
+                emoji: "🥓",
+                category: "pork",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "五花肉", amount: "300 克" },
+                    { name: "青椒", amount: "2 个" },
+                    { name: "蒜苗", amount: "2 根" },
+                    { name: "豆豉", amount: "1 汤匙" },
+                    { name: "盐", amount: "适量" }
+                ],
+                mainIngredients: ["猪肉", "青椒"],
+                steps: [
+                    "五花肉切片，青椒切块，蒜苗切段",
+                    "热锅不放油，放入五花肉煸炒",
+                    "炒至肉片出油微黄",
+                    "加入豆豉炒香",
+                    "倒入青椒翻炒",
+                    "加盐和蒜苗，翻炒均匀即可"
+                ],
+                tips: "盐煎肉是川菜家常菜，干香下饭。"
+            },
+            {
+                id: 55,
+                name: "粉蒸肉",
+                emoji: "🍖",
+                category: "pork",
+                difficulty: "中等",
+                time: "90 分钟",
+                calories: 420,
+                ingredients: [
+                    { name: "五花肉", amount: "500 克" },
+                    { name: "蒸肉米粉", amount: "150 克" },
+                    { name: "土豆", amount: "2 个" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "豆瓣酱", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "土豆"],
+                steps: [
+                    "五花肉切片，加入生抽、老抽、料酒、豆瓣酱腌制 30 分钟",
+                    "加入蒸肉米粉，拌匀",
+                    "土豆切块，铺在蒸碗底部",
+                    "将肉片铺在土豆上",
+                    "上锅大火蒸 60 分钟",
+                    "出锅倒扣在盘中即可"
+                ],
+                tips: "蒸肉米粉可以买现成的。蒸的时间越长越软糯。"
+            },
+            {
+                id: 56,
+                name: "京酱肉丝",
+                emoji: "🥢",
+                category: "pork",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 300,
+                ingredients: [
+                    { name: "猪里脊", amount: "300 克" },
+                    { name: "甜面酱", amount: "3 汤匙" },
+                    { name: "豆腐皮", amount: "4 张" },
+                    { name: "黄瓜", amount: "1 根" },
+                    { name: "大葱", amount: "1 根" },
+                    { name: "糖", amount: "1 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["猪肉", "黄瓜"],
+                steps: [
+                    "猪肉切丝，加料酒、淀粉腌制",
+                    "黄瓜、大葱切丝，豆腐皮切正方形",
+                    "热锅倒油，滑炒肉丝至变色盛出",
+                    "锅中留底油，放入甜面酱炒香",
+                    "加入糖和少许水，煮至浓稠",
+                    "倒入肉丝，翻炒均匀",
+                    "用豆腐皮包裹肉丝、黄瓜丝、葱丝食用"
+                ],
+                tips: "京酱肉丝是北京菜，甜面酱是关键。"
+            },
+            {
+                id: 57,
+                name: "酸菜白肉",
+                emoji: "🥬",
+                category: "pork",
+                difficulty: "简单",
+                time: "40 分钟",
+                calories: 320,
+                ingredients: [
+                    { name: "五花肉", amount: "400 克" },
+                    { name: "酸菜", amount: "300 克" },
+                    { name: "粉丝", amount: "100 克" },
+                    { name: "姜片", amount: "4 片" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "盐", amount: "适量" }
+                ],
+                mainIngredients: ["猪肉", "酸菜"],
+                steps: [
+                    "五花肉整块焯水后切片",
+                    "酸菜洗净切丝，粉丝泡软",
+                    "锅中放油，放入酸菜翻炒",
+                    "加入姜片、八角",
+                    "倒入开水，放入肉片",
+                    "大火烧开转小火炖 20 分钟",
+                    "加入粉丝，再煮 5 分钟",
+                    "加盐调味即可"
+                ],
+                tips: "东北特色菜，酸菜要用东北酸菜才正宗。"
+            },
+
+            // 海鲜类 (12 道)
+            {
+                id: 58,
+                name: "清蒸鲈鱼",
+                emoji: "🐟",
+                category: "seafood",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 180,
+                ingredients: [
+                    { name: "鲈鱼", amount: "1 条" },
+                    { name: "葱", amount: "2 根" },
+                    { name: "姜", amount: "1 块" },
+                    { name: "蒸鱼豉油", amount: "3 汤匙" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "食用油", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["鱼"],
+                steps: [
+                    "鲈鱼处理干净，两面划几刀",
+                    "用料酒抹遍鱼身，腌制 10 分钟",
+                    "鱼身上放姜片和葱段",
+                    "水开后上锅蒸 8 分钟",
+                    "关火焖 2 分钟",
+                    "倒掉盘中的水，撒上葱姜丝",
+                    "淋上蒸鱼豉油",
+                    "烧热油淋在葱姜丝上即可"
+                ],
+                tips: "蒸鱼时间要根据鱼的大小调整，一般 500 克蒸 8 分钟。"
+            },
+            {
+                id: 59,
+                name: "油焖大虾",
+                emoji: "🦐",
+                category: "seafood",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 220,
+                ingredients: [
+                    { name: "大虾", amount: "500 克" },
+                    { name: "葱姜", amount: "适量" },
+                    { name: "番茄酱", amount: "2 汤匙" },
+                    { name: "生抽", amount: "1 汤匙" },
+                    { name: "糖", amount: "1 茶匙" },
+                    { name: "料酒", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["虾"],
+                steps: [
+                    "大虾剪去虾须，挑去虾线",
+                    "热锅倒油，放入大虾煎至两面变红",
+                    "加入葱姜炒香",
+                    "加入番茄酱、生抽、糖、料酒",
+                    "加入少许水，焖煮 2 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "煎虾时要用铲子轻轻按压虾头，让虾油出来。"
+            },
+            {
+                id: 60,
+                name: "蒜蓉粉丝蒸扇贝",
+                emoji: "🐚",
+                category: "seafood",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 150,
+                ingredients: [
+                    { name: "扇贝", amount: "6 个" },
+                    { name: "粉丝", amount: "50 克" },
+                    { name: "大蒜", amount: "1 头" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "食用油", amount: "3 汤匙" }
+                ],
+                mainIngredients: ["扇贝", "粉丝"],
+                steps: [
+                    "粉丝泡软，扇贝洗净，大蒜切末",
+                    "热锅倒油，放入一半蒜末炒至金黄",
+                    "加入生抽、蚝油和另一半蒜末，制成蒜蓉酱",
+                    "粉丝放在扇贝上，淋上蒜蓉酱",
+                    "水开后上锅蒸 5 分钟",
+                    "撒上葱花，淋热油即可"
+                ],
+                tips: "蒜蓉分两次放，香味更浓郁。蒸的时间不要过长。"
+            },
+            {
+                id: 61,
+                name: "红烧带鱼",
+                emoji: "🐟",
+                category: "seafood",
+                difficulty: "中等",
+                time: "30 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "带鱼", amount: "500 克" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "八角", amount: "2 个" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "糖", amount: "1 茶匙" }
+                ],
+                mainIngredients: ["带鱼"],
+                steps: [
+                    "带鱼处理干净切段，两面划几刀",
+                    "用料酒和盐腌制 10 分钟",
+                    "热锅倒油，放入带鱼煎至两面金黄",
+                    "加入葱姜蒜、八角炒香",
+                    "加入生抽、老抽、料酒、糖和水",
+                    "大火烧开转小火焖煮 15 分钟",
+                    "大火收汁即可"
+                ],
+                tips: "煎带鱼前用姜擦锅可以防止粘锅。"
+            },
+            {
+                id: 62,
+                name: "椒盐虾",
+                emoji: "🦐",
+                category: "seafood",
+                difficulty: "简单",
+                time: "15 分钟",
+                calories: 200,
+                ingredients: [
+                    { name: "大虾", amount: "400 克" },
+                    { name: "青椒", amount: "1 个" },
+                    { name: "红椒", amount: "1 个" },
+                    { name: "洋葱", amount: "1/4 个" },
+                    { name: "蒜末", amount: "适量" },
+                    { name: "椒盐", amount: "1 汤匙" },
+                    { name: "淀粉", amount: "2 汤匙" }
+                ],
+                mainIngredients: ["虾"],
+                steps: [
+                    "大虾剪去虾须，挑去虾线，用厨房纸吸干",
+                    "虾表面拍一层薄薄的淀粉",
+                    "热锅多倒油，烧至七成热，放入大虾炸至酥脆",
+                    "青椒、红椒、洋葱切小丁",
+                    "锅中留底油，放入蒜末炒香",
+                    "倒入蔬菜丁翻炒",
+                    "加入炸好的虾和椒盐，翻炒均匀即可"
+                ],
+                tips: "虾一定要吸干水分再炸，才会酥脆。"
+            },
+            {
+                id: 63,
+                name: "蛤蜊豆腐汤",
+                emoji: "🍲",
+                category: "seafood",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 120,
+                ingredients: [
+                    { name: "蛤蜊", amount: "300 克" },
+                    { name: "嫩豆腐", amount: "1 盒" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "葱花", amount: "适量" },
+                    { name: "盐", amount: "适量" },
+                    { name: "香油", amount: "几滴" }
+                ],
+                mainIngredients: ["蛤蜊", "豆腐"],
+                steps: [
+                    "蛤蜊提前吐沙洗净，豆腐切块",
+                    "锅中加水，放入姜片和豆腐，大火烧开",
+                    "转中火煮 5 分钟",
+                    "放入蛤蜊，煮至开口",
+                    "加盐调味，撒葱花，滴香油即可"
+                ],
+                tips: "蛤蜊一定要吐沙干净，汤才会鲜美。"
+            },
+            {
+                id: 64,
+                name: "香辣蟹",
+                emoji: "🦀",
+                category: "seafood",
+                difficulty: "中等",
+                time: "30 分钟",
+                calories: 320,
+                ingredients: [
+                    { name: "螃蟹", amount: "2 只" },
+                    { name: "干辣椒", amount: "10 个" },
+                    { name: "花椒", amount: "1 汤匙" },
+                    { name: "姜蒜", amount: "适量" },
+                    { name: "豆瓣酱", amount: "1 汤匙" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "糖", amount: "1 茶匙" },
+                    { name: "啤酒", amount: "200 毫升" }
+                ],
+                mainIngredients: ["螃蟹"],
+                steps: [
+                    "螃蟹处理干净，对半切开，切口沾淀粉",
+                    "热锅倒油，放入螃蟹煎至变红，盛出",
+                    "锅中留底油，放入干辣椒、花椒、豆瓣酱炒香",
+                    "加入姜蒜末，倒入螃蟹翻炒",
+                    "加入生抽、糖、啤酒，大火烧开",
+                    "转中火焖煮 10 分钟，收汁即可"
+                ],
+                tips: "螃蟹切口沾淀粉可以锁住蟹黄。"
+            },
+            {
+                id: 65,
+                name: "白灼虾",
+                emoji: "🦐",
+                category: "seafood",
+                difficulty: "简单",
+                time: "10 分钟",
+                calories: 100,
+                ingredients: [
+                    { name: "大虾", amount: "500 克" },
+                    { name: "姜片", amount: "3 片" },
+                    { name: "葱段", amount: "2 根" },
+                    { name: "料酒", amount: "1 汤匙" },
+                    { name: "蒸鱼豉油", amount: "3 汤匙" },
+                    { name: "食用油", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["虾"],
+                steps: [
+                    "大虾剪去虾须，挑去虾线",
+                    "锅中加水，放入姜片、葱段、料酒烧开",
+                    "放入大虾，煮至变红卷曲",
+                    "捞出沥干，装盘",
+                    "淋上蒸鱼豉油，撒葱花",
+                    "烧热油淋在虾上即可"
+                ],
+                tips: "煮虾时间不要过长，变红卷曲即可。"
+            },
+            {
+                id: 66,
+                name: "蒜蓉蒸虾",
+                emoji: "🦐",
+                category: "seafood",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 140,
+                ingredients: [
+                    { name: "大虾", amount: "10 只" },
+                    { name: "大蒜", amount: "1 头" },
+                    { name: "粉丝", amount: "50 克" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "葱花", amount: "适量" }
+                ],
+                mainIngredients: ["虾", "粉丝"],
+                steps: [
+                    "粉丝泡软，大虾开背去虾线",
+                    "大蒜切末，热油爆香，加入生抽、蚝油",
+                    "粉丝铺在盘底，放上虾",
+                    "淋上蒜蓉酱",
+                    "水开后蒸 5 分钟",
+                    "撒葱花，淋热油即可"
+                ],
+                tips: "虾开背可以让蒜蓉更入味。"
+            },
+            {
+                id: 67,
+                name: "红烧鲳鱼",
+                emoji: "🐟",
+                category: "seafood",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 260,
+                ingredients: [
+                    { name: "鲳鱼", amount: "1 条" },
+                    { name: "葱姜蒜", amount: "适量" },
+                    { name: "八角", amount: "1 个" },
+                    { name: "生抽", amount: "2 汤匙" },
+                    { name: "老抽", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "糖", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["鱼"],
+                steps: [
+                    "鲳鱼处理干净，两面划几刀",
+                    "热锅倒油，放入鲳鱼煎至两面金黄",
+                    "加入葱姜蒜、八角炒香",
+                    "加入生抽、老抽、料酒、糖和水",
+                    "大火烧开转小火焖煮 15 分钟",
+                    "大火收汁，装盘即可"
+                ],
+                tips: "煎鱼时不要频繁翻动，一面煎好再翻面。"
+            },
+            {
+                id: 68,
+                name: "海鲜炒饭",
+                emoji: "🍚",
+                category: "seafood",
+                difficulty: "简单",
+                time: "20 分钟",
+                calories: 350,
+                ingredients: [
+                    { name: "米饭", amount: "2 碗" },
+                    { name: "虾仁", amount: "100 克" },
+                    { name: "蛤蜊肉", amount: "50 克" },
+                    { name: "鸡蛋", amount: "2 个" },
+                    { name: "青豆", amount: "30 克" },
+                    { name: "胡萝卜", amount: "1/4 根" },
+                    { name: "盐", amount: "适量" },
+                    { name: "生抽", amount: "1 汤匙" }
+                ],
+                mainIngredients: ["米饭", "虾仁"],
+                steps: [
+                    "虾仁、蛤蜊肉焯水，胡萝卜切丁",
+                    "鸡蛋炒散盛出",
+                    "热锅倒油，放入蔬菜丁翻炒",
+                    "加入海鲜和米饭，炒散",
+                    "加入鸡蛋、盐、生抽，翻炒均匀即可"
+                ],
+                tips: "用隔夜饭炒出来的饭更粒粒分明。"
+            },
+            {
+                id: 69,
+                name: "姜葱炒蟹",
+                emoji: "🦀",
+                category: "seafood",
+                difficulty: "中等",
+                time: "25 分钟",
+                calories: 280,
+                ingredients: [
+                    { name: "螃蟹", amount: "2 只" },
+                    { name: "姜", amount: "1 大块" },
+                    { name: "葱", amount: "3 根" },
+                    { name: "蒜", amount: "4 瓣" },
+                    { name: "生抽", amount: "3 汤匙" },
+                    { name: "蚝油", amount: "1 汤匙" },
+                    { name: "料酒", amount: "2 汤匙" },
+                    { name: "淀粉", amount: "适量" }
+                ],
+                mainIngredients: ["螃蟹"],
+                steps: [
+                    "螃蟹处理干净，切块，切口沾淀粉",
+                    "姜切片，葱切段，蒜拍扁",
+                    "热锅倒油，放入螃蟹煎至变红，盛出",
+                    "锅中留底油，放入姜片、蒜炒香",
+                    "倒入螃蟹，加入生抽、蚝油、料酒翻炒",
+                    "加入葱段，翻炒均匀即可"
+                ],
+                tips: "姜要多放，既能去腥又能驱寒。"
+            }
+        ];
+
+        // 渲染菜谱函数
+        function renderRecipes(recipesToRender) {
+            const grid = document.getElementById('recipesGrid');
+            const countEl = document.getElementById('recipeCount');
+
+            if (!grid || !countEl) return;
+
+            countEl.textContent = recipesToRender.length;
+
+            if (recipesToRender.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">没有找到匹配的菜谱</p>';
+                return;
+            }
+
+            grid.innerHTML = recipesToRender.map(recipe => `
+                <div class="recipe-card" onclick="showRecipe(${recipe.id})">
+                    <div class="recipe-image">
+                        ${recipe.emoji}
+                        <span class="recipe-tag">${getCategoryName(recipe.category)}</span>
+                    </div>
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">${recipe.name}</h3>
+                        <div class="recipe-meta">
+                            <span>⏱️ ${recipe.time}</span>
+                            <span>📊 ${recipe.difficulty}</span>
+                            <span>🔥 ${recipe.calories}卡</span>
+                        </div>
+                        <div class="recipe-ingredients">
+                            ${recipe.mainIngredients.slice(0, 3).map(ing => `<span class="ingredient-tag">${ing}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取分类名称
+        function getCategoryName(category) {
+            const names = {
+                'egg': '蛋类',
+                'chicken': '禽肉',
+                'beef': '牛肉',
+                'pork': '猪肉',
+                'seafood': '海鲜',
+                'vegetable': '素菜',
+                'soup': '汤品',
+                'staple': '主食',
+                'cold': '凉菜'
+            };
+            return names[category] || category;
+        }
+
+        // 搜索菜谱 - 支持多食材搜索
+        function searchRecipes() {
+            const input = document.getElementById('searchInput');
+            if (!input) return;
+
+            const searchTerm = input.value.trim();
+
+            if (!searchTerm) {
+                renderRecipes(recipes);
+                return;
+            }
+
+            // 支持多种分隔符：空格、逗号、顿号、分号
+            const keywords = searchTerm.split(/[\s,,.;,]/).filter(k => k.trim().length > 0);
+
+            if (keywords.length === 0) {
+                renderRecipes(recipes);
+                return;
+            }
+
+            // 多食材搜索：匹配所有关键词
+            const filtered = recipes.filter(recipe => {
+                const searchText = (
+                    recipe.name + ' ' +
+                    recipe.mainIngredients.join(' ') + ' ' +
+                    recipe.ingredients.map(ing => ing.name).join(' ')
+                ).toLowerCase();
+
+                // 所有关键词都要匹配到
+                return keywords.every(keyword =>
+                    searchText.includes(keyword.toLowerCase().trim())
+                );
+            });
+
+            renderRecipes(filtered);
+        }
+
+        // 搜索框回车事件
+        function initSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchRecipes();
+                    }
+                });
+            }
+        }
+
+        // 显示菜谱详情
+        function showRecipe(id) {
+            const recipe = recipes.find(r => r.id === id);
+            if (!recipe) return;
+
+            document.getElementById('modalEmoji').textContent = recipe.emoji;
+            document.getElementById('modalTitle').textContent = recipe.name;
+            document.getElementById('modalMeta').innerHTML = `
+                <div class="modal-meta-item">⏱️ ${recipe.time}</div>
+                <div class="modal-meta-item">📊 ${recipe.difficulty}</div>
+                <div class="modal-meta-item">🔥 ${recipe.calories}卡</div>
+            `;
+
+            const ingredientsHtml = recipe.ingredients.map(ing => `
+                <div class="ingredient-item">
+                    <span class="ingredient-name">${ing.name}</span>
+                    <span class="ingredient-amount">${ing.amount}</span>
+                </div>
+            `).join('');
+
+            const stepsHtml = recipe.steps.map((step, index) => `
+                <div class="step-item">
+                    <div class="step-number">${index + 1}</div>
+                    <div class="step-content">${step}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="modal-section">
+                    <h3 class="modal-section-title">📝 食材清单</h3>
+                    <div class="ingredients-list">${ingredientsHtml}</div>
+                </div>
+                <div class="modal-section">
+                    <h3 class="modal-section-title">👨‍🍳 制作步骤</h3>
+                    <div class="steps-list">${stepsHtml}</div>
+                </div>
+                <div class="tips-box">
+                    <div class="tips-title">💡 小贴士</div>
+                    <div class="tips-content">${recipe.tips}</div>
+                </div>
+            `;
+
+            document.getElementById('modalOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 分类筛选
+        function initCategoryFilter() {
+            const categoryTags = document.querySelectorAll('.category-tag');
+            categoryTags.forEach(tag => {
+                tag.addEventListener('click', function() {
+                    categoryTags.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const category = this.dataset.category;
+                    if (category === 'all') {
+                        renderRecipes(recipes);
+                    } else {
+                        const filtered = recipes.filter(r => r.category === category);
+                        renderRecipes(filtered);
+                    }
+                });
+            });
+        }
+
+        // 创建星空背景
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            if (!starsContainer) return;
+
+            const numStars = 100;
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // 点击模态框外部关闭
+        function initModalClose() {
+            const overlay = document.getElementById('modalOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeModal();
+                    }
+                });
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderRecipes(recipes);
+            initSearch();
+            initCategoryFilter();
+            createStars();
+            initModalClose();
+        });
+    </script>
+</body>
+</html>
+                tips: "煎虾时要用铲子轻轻按压虾头，让虾油出来。"
+            },
+            {
+                id: 60,
+                name:
